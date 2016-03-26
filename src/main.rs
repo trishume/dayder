@@ -4,6 +4,7 @@ extern crate iron;
 #[macro_use]
 extern crate router;
 extern crate staticfile;
+extern crate mount;
 mod lib;
 
 use std::fs::File;
@@ -14,6 +15,9 @@ use iron::status;
 use iron::headers;
 use iron::mime::Mime;
 use router::{Router};
+use mount::Mount;
+use staticfile::Static;
+use std::path::Path;
 
 fn main() {
     fn request_handler(req: &mut Request) -> IronResult<Response>{
@@ -32,16 +36,10 @@ fn main() {
         return Ok(Response::with((status::Ok, contentType, response_data)));
     };
 
-    let router = router!(
-        post "/find" => request_handler
-            );
+    let mut mount = Mount::new();
+    mount
+        .mount("/", Static::new(Path::new("./public")))
+        .mount("/find", request_handler);
 
-
-    let mut possibilities = lib::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap());
-    for i in 0..possibilities.len() - 1 {
-        possibilities.pop();
-    }
-    lib::btsf::write_btsf_file(&possibilities, &mut File::create("./test.btsf").unwrap());
-
-    Iron::new(router).http("localhost:8080").unwrap();
+    Iron::new(mount).http("localhost:8080").unwrap();
 }
