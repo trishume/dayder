@@ -62,6 +62,34 @@ function readBtsfFile(dataBuf) {
   return records;
 }
 
+function serializeBtsfRecord(record) {
+  var encoder = new TextEncoder("utf-8");
+  var nameBuf = encoder.encode(record.name);
+
+  var length = 4*4+4*2+nameBuf.length+record.data.length*8;
+  var dataBuf = new ArrayBuffer(length);
+  var dv = new DataView(dataBuf);
+
+  // header
+  dv.setUint32(4*0, 1, true);
+  dv.setUint32(4*1, 4*4, true);
+  dv.setUint32(4*2, 4*2, true);
+  dv.setUint32(4*3, 1, true);
+
+  // record
+  dv.setUint32(16+4*0, record.data.length, true);
+  dv.setUint32(16+4*1, record.name.length, true);
+  for (var i = 0; i < nameBuf.length; i++) {
+    dv.setUint8(6*4+i, nameBuf[i]);
+  }
+  for (var i = 0; i < record.data.length; i++) {
+    dv.setInt32(6*4+nameBuf.length+i*8, record.data[i].t, true);
+    dv.setFloat32(6*4+nameBuf.length+i*8+4, record.data[i].v, true);
+  }
+
+  return dataBuf;
+}
+
 function maybeTrim(name, len) {
   if(name.length > len-3) {
     return name.slice(0,len-3)+"...";
