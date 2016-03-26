@@ -67,7 +67,7 @@ pub fn write_btsf_file<T: Write>(data: &Vec<BinaryTimeSeries>, output: &mut T){
     for record in data {
         output.write_u32::<LittleEndian>(record.data.len() as u32);
         output.write_u32::<LittleEndian>(record.name.len() as u32);
-        output.write_u32::<LittleEndian>(record.correlation as u32);
+        output.write_u32::<LittleEndian>(record.correlation as f32);
         output.write(&record.name.as_bytes());
         for i in 0..record.data.len() {
             output.write_i32::<LittleEndian>(record.data[i].t);
