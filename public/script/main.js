@@ -1,5 +1,6 @@
 var allRecords = null;
 var normalizeYAxis = false;
+var curOverlay = null;
 
 function fetchArrayBuffer(url, callback) {
   var oReq = new XMLHttpRequest();
@@ -23,6 +24,11 @@ function readBtsfRecord(dataBuf, offset, H) {
   var N = dv.getUint32(offset+4*0, true);
   var L = dv.getUint32(offset+4*1, true);
 
+  var C = null;
+  if(H > 8) {
+    C = dv.getFloat32(offset+4*2, true);
+  }
+
   var decoder = new TextDecoder();
   var strView = new DataView(dataBuf, offset+H, L);
   var str = decoder.decode(strView);
@@ -39,7 +45,8 @@ function readBtsfRecord(dataBuf, offset, H) {
     size: H+L+N*8,
     record: {
       name: str,
-      data: data
+      data: data,
+      corr: C
     }
   };
 }
@@ -98,21 +105,12 @@ function maybeTrim(name, len) {
   }
 }
 
-function drawGraph(graphNum, data) {
-  var canvasEl = document.getElementById("canv-"+graphNum);
-  var ctx = canvasEl.getContext("2d");
-  var h = canvasEl.height;
-  var w = canvasEl.width;
-
-  ctx.fillStyle = "white";
-  ctx.fillRect(0,0,w,h);
-
+function drawGraphLine(ctx,w,h, data) {
   var maxV = _.max(data, function(p) { return p.v; }).v;
   var minV = _.min(data, function(p) { return p.v; }).v;
   var maxT = _.max(data, function(p) { return p.t; }).t;
   var minT = _.min(data, function(p) { return p.t; }).t;
 
-  ctx.strokeStyle = "#2196F3";
   ctx.beginPath();
   ctx.moveTo(0,h);
   for(var i = 0; i < data.length; i++) {
@@ -130,6 +128,21 @@ function drawGraph(graphNum, data) {
   ctx.stroke();
 }
 
+function drawGraph(graphNum, data) {
+  var canvasEl = document.getElementById("canv-"+graphNum);
+  var ctx = canvasEl.getContext("2d");
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(0,0,canvasEl.width,canvasEl.height);
+
+  if(curOverlay !== null) {
+    ctx.strokeStyle = "grey";
+    drawGraphLine(ctx,canvasEl.width,canvasEl.height, curOverlay);
+  }
+  ctx.strokeStyle = "#2196F3";
+  drawGraphLine(ctx,canvasEl.width,canvasEl.height, data);
+}
+
 function displayRecords(records, maxRecords) {
   var numToDisplay = Math.min(maxRecords, records.length);
   setNumberOfGraphs(numToDisplay);
@@ -137,6 +150,16 @@ function displayRecords(records, maxRecords) {
   for(var i = 0; i < numToDisplay; i++) {
     var label = document.getElementById("label-"+i);
     label.innerText = maybeTrim(records[i].name,60);
+
+    var link = document.getElementById("btn-"+i);
+    // needed because JS closures interact weirdly with loops
+    (function(){
+      var record = records[i];
+      link.onclick = function() {
+        findCorrelations(record);
+      }
+    })();
+
     drawGraph(i, records[i].data);
   }
 }
@@ -179,11 +202,32 @@ function setNumberOfGraphs(n) {
 function filterGraphs() {
   var query = document.getElementById("filter-box").value;
   normalizeYAxis = !document.getElementById("zeroYAxis").checked;
-  console.log(normalizeYAxis);
   var records = _.filter(allRecords, function(r) {
     return r.name.includes(query);
   });
   displayRecords(records, 200);
+}
+
+function findCorrelations(record) {
+  var dataBuf = serializeBtsfRecord(record);
+  var xhr = new XMLHttpRequest;
+  xhr.open("POST", "/find", true);
+  xhr.responseType = "arraybuffer";
+  xhr.onload = function (oEvent) {
+    var arrayBuffer = xhr.response; // Note: not oReq.responseText
+    if (arrayBuffer) {
+      allRecords = readBtsfFile(arrayBuffer);
+
+      curOverlay = record.data;
+      document.getElementById('filter-box').value = "";
+      document.getElementById('zeroYAxis').checked = false;
+
+      filterGraphs();
+    } else {
+      console.log("Couldn't fetch file " + url);
+    }
+  };
+  xhr.send(new DataView(dataBuf));
 }
 
 function loadBtsf(dataBuf) {
