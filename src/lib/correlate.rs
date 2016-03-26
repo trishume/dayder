@@ -10,7 +10,7 @@ pub fn correlate(data: &BinaryTimeSeries) -> Vec<BinaryTimeSeries>{
         possibilities[i].correlation = pearson_correlation_coefficient(&xs, &ys) as f32;
     }
 
-    possibilities.sort_by(|btsa, btsb| btsa.correlation.partial_cmp(&btsa.correlation).unwrap());
+    possibilities.sort_by(|btsa, btsb| btsa.correlation.partial_cmp(&btsb.correlation).unwrap());
 
     println!("{}", possibilities[0].correlation);
 

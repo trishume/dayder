@@ -158,8 +158,8 @@ function setNumberOfGraphs(n) {
 
       var canvas = document.createElement("canvas");
       canvas.id = "canv-"+(numPresent+i);
-      canvas.height = 200;
-      canvas.width = 350;
+      canvas.height = 160;
+      canvas.width = 300;
       graphDiv.appendChild(canvas);
 
       var correlate = document.createElement("a");
