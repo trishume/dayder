@@ -1,5 +1,6 @@
 var allRecords = null;
 var normalizeYAxis = false;
+var curOverlay = null;
 
 function fetchArrayBuffer(url, callback) {
   var oReq = new XMLHttpRequest();
@@ -104,21 +105,12 @@ function maybeTrim(name, len) {
   }
 }
 
-function drawGraph(graphNum, data) {
-  var canvasEl = document.getElementById("canv-"+graphNum);
-  var ctx = canvasEl.getContext("2d");
-  var h = canvasEl.height;
-  var w = canvasEl.width;
-
-  ctx.fillStyle = "white";
-  ctx.fillRect(0,0,w,h);
-
+function drawGraphLine(ctx,w,h, data) {
   var maxV = _.max(data, function(p) { return p.v; }).v;
   var minV = _.min(data, function(p) { return p.v; }).v;
   var maxT = _.max(data, function(p) { return p.t; }).t;
   var minT = _.min(data, function(p) { return p.t; }).t;
 
-  ctx.strokeStyle = "#2196F3";
   ctx.beginPath();
   ctx.moveTo(0,h);
   for(var i = 0; i < data.length; i++) {
@@ -134,6 +126,21 @@ function drawGraph(graphNum, data) {
     ctx.lineTo(x,h-y);
   }
   ctx.stroke();
+}
+
+function drawGraph(graphNum, data) {
+  var canvasEl = document.getElementById("canv-"+graphNum);
+  var ctx = canvasEl.getContext("2d");
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(0,0,canvasEl.width,canvasEl.height);
+
+  if(curOverlay !== null) {
+    ctx.strokeStyle = "grey";
+    drawGraphLine(ctx,canvasEl.width,canvasEl.height, curOverlay);
+  }
+  ctx.strokeStyle = "#2196F3";
+  drawGraphLine(ctx,canvasEl.width,canvasEl.height, data);
 }
 
 function displayRecords(records, maxRecords) {
@@ -210,7 +217,11 @@ function findCorrelations(record) {
     var arrayBuffer = xhr.response; // Note: not oReq.responseText
     if (arrayBuffer) {
       allRecords = readBtsfFile(arrayBuffer);
-      console.log(allRecords);
+
+      curOverlay = record.data;
+      document.getElementById('filter-box').value = "";
+      document.getElementById('zeroYAxis').checked = false;
+
       filterGraphs();
     } else {
       console.log("Couldn't fetch file " + url);
