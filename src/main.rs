@@ -1,11 +1,19 @@
 extern crate byteorder;
+extern crate stats;
+extern crate iron;
+#[macro_use]
+extern crate router;
+extern crate staticfile;
 mod lib;
 
 use std::fs::File;
 
-fn main() {
-    let datas = lib::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap());
+use iron::{Iron, Request, Response, IronResult};
+use iron::status;
+use router::{Router};
 
-    let mut outdata = File::create("output.btsf").unwrap();
-    lib::btsf::write_btsf_file(&datas, &mut outdata);
+fn main() {
+    fn request_handler(req: &mut Request) -> IronResult<Response>{
+        
+    }
 }

@@ -10,7 +10,8 @@ pub struct Point {
 
 pub struct BinaryTimeSeries {
     pub name: String,
-    pub data: Vec<Point>
+    pub data: Vec<Point>,
+    pub correlation: f32
 }
 
 pub fn read_btsf_file(f: &mut File) -> Vec<BinaryTimeSeries> {
@@ -47,7 +48,8 @@ pub fn read_btsf_file(f: &mut File) -> Vec<BinaryTimeSeries> {
         }
         series.push(BinaryTimeSeries{
             name: String::from(name),
-            data: data
+            data: data,
+            correlation: 0.0
         })
     }
 
@@ -56,15 +58,16 @@ pub fn read_btsf_file(f: &mut File) -> Vec<BinaryTimeSeries> {
 
 pub fn write_btsf_file<T: Write>(data: &Vec<BinaryTimeSeries>, output: &mut T){
     // Version Header, File Header Len, Rec Header Len
-    output.write_u32::<LittleEndian>(1).unwrap();
+    output.write_u32::<LittleEndian>(2).unwrap();
     output.write_u32::<LittleEndian>(16).unwrap();
-    output.write_u32::<LittleEndian>(8).unwrap();
+    output.write_u32::<LittleEndian>(12).unwrap();
 
     output.write_u32::<LittleEndian>(data.len() as u32);
 
     for record in data {
         output.write_u32::<LittleEndian>(record.data.len() as u32);
         output.write_u32::<LittleEndian>(record.name.len() as u32);
+        output.write_u32::<LittleEndian>(record.correlation as u32);
         output.write(&record.name.as_bytes());
         for i in 0..record.data.len() {
             output.write_i32::<LittleEndian>(record.data[i].t);
