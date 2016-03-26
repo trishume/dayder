@@ -4,19 +4,27 @@
   <title>dayder</title>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
   <script type="text/javascript" src="script/main.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
   <style>
     body {
       font-family: sans-serif;
+      font-family: 'PT Sans';
+      background: #A4CFBE;
     }
-    h4 {
+    .graph h4 {
       font-family: sans-serif;
-      font-size: 8pt;
+      font-size: 12pt;
       margin: 0px;
       width: 190px;
+      padding: 10px;
+      display: block;
+      color: [];
     }
 
     h1 {
-      font-family: 'Courier';
+      font-family: 'PT Sans';
+      text-align: center;
+      color: #555;
     }
 
     .graphs {
@@ -28,9 +36,9 @@
     .graph {
       background-color: #EEE;
       margin: 10px;
-      padding: 5px;
       display: flex;
       flex-direction: column;
+      background: #417378;
       justify-content: space-between;
     }
 
@@ -47,21 +55,40 @@
     #filter-box {
       width: 800px;
       height: 30px;
+      padding: 5px;
+      outline: none;
+      background: none;
+      -webkit-appearance:none;
+      border: 0;
+      webkit-box-shadow: none;
+      box-shadow: none;
+        font-size: 24px;
+        color: #555;
+      border-bottom: 3px solid #555;
     }
 
     .controls {
       margin-top: 7px;
     }
+
+   .btsf-attribution {
+       position: absolute;
+       top: 40px;
+       left: 40px;
+   }
   </style>
 </head>
 <body onload="init()">
-  <div class="container">
-    <h1>dayder</h1>
-    <input type="text" id="filter-box" onchange="filterGraphs();" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();">
+    <div class="container">
+        <header>
+            <img class="btsf-attribution" src="btsf.png">
+            <h1>dayder</h1>
+            <input type="text" id="filter-box" onchange="filterGraphs();" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" placeholder="type to filter data">
+        </header>
     <div class="controls">
-      <label><input type="checkbox" id="zeroYAxis" onchange="filterGraphs();" checked> Include zero in Y axis</label>
+        <label><input type="checkbox" id="zeroYAxis" onchange="filterGraphs();" checked> Include zero in Y axis</label>
     </div>
-    <div id="graphs" class="graphs">
+        <div id="graphs" class="graphs">
     </div>
   </div>
 </body>
