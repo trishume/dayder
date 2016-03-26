@@ -193,6 +193,7 @@ function setNumberOfGraphs(n) {
 
       var correlation = document.createElement("span");
       correlation.innerText = "r = 0.8";
+      correlation.className = "correlation"
       graphDiv.appendChild(correlation);
 
       graphsDiv.appendChild(graphDiv);
