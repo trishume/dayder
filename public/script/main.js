@@ -1,4 +1,5 @@
 var allRecords = null;
+var normalizeYAxis = false;
 
 function fetchArrayBuffer(url, callback) {
   var oReq = new XMLHttpRequest();
@@ -88,7 +89,13 @@ function drawGraph(graphNum, data) {
   ctx.moveTo(0,h);
   for(var i = 0; i < data.length; i++) {
     var x = (data[i].t-minT)/(maxT-minT)*w;
-    var y = (data[i].v-minV)/(maxV-minV)*h;
+    var yFrac;
+    if(normalizeYAxis) {
+      yFrac = (data[i].v-minV)/(maxV-minV);
+    } else {
+      yFrac = (data[i].v)/(maxV);
+    }
+    var y = yFrac*(h-5)+2;
     if(i == 0) ctx.moveTo(x,h-y);
     ctx.lineTo(x,h-y);
   }
@@ -138,6 +145,8 @@ function setNumberOfGraphs(n) {
 
 function filterGraphs() {
   var query = document.getElementById("filter-box").value;
+  normalizeYAxis = !document.getElementById("zeroYAxis").checked;
+  console.log(normalizeYAxis);
   var records = _.filter(allRecords, function(r) {
     return r.name.includes(query);
   });
