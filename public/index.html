@@ -2,9 +2,66 @@
 <html>
 <head>
   <title>dayder</title>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
   <script type="text/javascript" src="script/main.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    h4 {
+      font-family: sans-serif;
+      font-size: 8pt;
+      margin: 5px 5px;
+      width: 190px;
+    }
+
+    h1 {
+      font-family: 'Courier';
+    }
+
+    canvas {
+      margin: 5px;
+    }
+
+    .graphs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .graph {
+      background-color: #EEE;
+      margin: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #filter-box {
+      width: 800px;
+      height: 30px;
+    }
+
+    .controls {
+      margin-top: 7px;
+    }
+  </style>
 </head>
-<body>
-Lolhi
+<body onload="init()">
+  <div class="container">
+    <h1>dayder</h1>
+    <input type="text" id="filter-box" onchange="filterGraphs();" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();">
+    <div class="controls">
+      <label><input type="checkbox" id="zeroYAxis" onchange="filterGraphs();" checked> Include zero in Y axis</label>
+    </div>
+    <div id="graphs" class="graphs">
+    </div>
+  </div>
 </body>
 </html>
