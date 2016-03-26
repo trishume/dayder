@@ -154,7 +154,6 @@ function setNumberOfGraphs(n) {
 
       var label = document.createElement("h4");
       label.id = "label-"+(numPresent+i);
-      label.innerText = "lol";
       graphDiv.appendChild(label);
 
       var canvas = document.createElement("canvas");
@@ -162,6 +161,13 @@ function setNumberOfGraphs(n) {
       canvas.height = 100;
       canvas.width = 190;
       graphDiv.appendChild(canvas);
+
+      var correlate = document.createElement("a");
+      correlate.id = "btn-"+(numPresent+i);
+      correlate.innerText = "Find correlations!";
+      correlate.href = "javascript:null";
+      graphDiv.appendChild(correlate);
+
       graphsDiv.appendChild(graphDiv);
     }
   } else if(delta < 0) {
