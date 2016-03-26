@@ -59,9 +59,49 @@ function readBtsfFile(dataBuf) {
   return records;
 }
 
-function loadBtsf(dataBuf) {
-  var records = readBtsfFile(dataBuf);
-  setNumberOfGraphs(100);
+function maybeTrim(name, len) {
+  if(name.length > len-3) {
+    return name.slice(0,len-3)+"...";
+  } else {
+    return name;
+  }
+}
+
+function drawGraph(graphNum, data) {
+  var canvasEl = document.getElementById("canv-"+graphNum);
+  var ctx = canvasEl.getContext("2d");
+  var h = canvasEl.height;
+  var w = canvasEl.width;
+
+  ctx.fillStyle = "white";
+  ctx.fillRect(0,0,w,h);
+
+  var maxV = _.max(data, function(p) { return p.v; }).v;
+  var minV = _.min(data, function(p) { return p.v; }).v;
+  var maxT = _.max(data, function(p) { return p.t; }).t;
+  var minT = _.min(data, function(p) { return p.t; }).t;
+
+  ctx.strokeStyle = "blue";
+  ctx.beginPath();
+  ctx.moveTo(0,h);
+  for(var i = 0; i < data.length; i++) {
+    var x = (data[i].t-minT)/(maxT-minT)*w;
+    var y = (data[i].v-minV)/(maxV-minV)*h;
+    if(i == 0) ctx.moveTo(x,h-y);
+    ctx.lineTo(x,h-y);
+  }
+  ctx.stroke();
+}
+
+function displayRecords(records, maxRecords) {
+  var numToDisplay = Math.min(maxRecords, records.length);
+  setNumberOfGraphs(numToDisplay);
+
+  for(var i = 0; i < numToDisplay; i++) {
+    var label = document.getElementById("label-"+i);
+    label.innerText = maybeTrim(records[i].name,40);
+    drawGraph(i, records[i].data);
+  }
 }
 
 // sets up the DOM with the right number of graph boxes
@@ -83,7 +123,7 @@ function setNumberOfGraphs(n) {
       var canvas = document.createElement("canvas");
       canvas.id = "canv-"+(numPresent+i);
       canvas.height = 100;
-      canvas.width = 200;
+      canvas.width = 190;
       graphDiv.appendChild(canvas);
       graphsDiv.appendChild(graphDiv);
     }
@@ -92,6 +132,11 @@ function setNumberOfGraphs(n) {
       graphsDiv.children[numPresent-1-i].remove();
     }
   }
+}
+
+function loadBtsf(dataBuf) {
+  var records = readBtsfFile(dataBuf);
+  displayRecords(records, 100);
 }
 
 function init() {
