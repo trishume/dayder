@@ -150,6 +150,7 @@ function displayRecords(records, maxRecords) {
   for(var i = 0; i < numToDisplay; i++) {
     var label = document.getElementById("label-"+i);
     label.innerText = maybeTrim(records[i].name,60);
+    label.title = records[i].name;
 
     var link = document.getElementById("btn-"+i);
     // needed because JS closures interact weirdly with loops
@@ -189,6 +190,10 @@ function setNumberOfGraphs(n) {
       correlate.id = "btn-"+(numPresent+i);
       correlate.src = "graph-icon.svg";
       graphDiv.appendChild(correlate);
+
+      var correlation = document.createElement("span");
+      correlation.innerText = "r = 0.8";
+      graphDiv.appendChild(correlation);
 
       graphsDiv.appendChild(graphDiv);
     }
