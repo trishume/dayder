@@ -112,7 +112,7 @@ function drawGraph(graphNum, data) {
   var maxT = _.max(data, function(p) { return p.t; }).t;
   var minT = _.min(data, function(p) { return p.t; }).t;
 
-  ctx.strokeStyle = "blue";
+  ctx.strokeStyle = "#2196F3";
   ctx.beginPath();
   ctx.moveTo(0,h);
   for(var i = 0; i < data.length; i++) {
@@ -162,10 +162,9 @@ function setNumberOfGraphs(n) {
       canvas.width = 300;
       graphDiv.appendChild(canvas);
 
-      var correlate = document.createElement("a");
+      var correlate = document.createElement("img");
       correlate.id = "btn-"+(numPresent+i);
-      correlate.innerText = "Find correlations!";
-      correlate.href = "javascript:null";
+      correlate.src = "graph-icon.svg";
       graphDiv.appendChild(correlate);
 
       graphsDiv.appendChild(graphDiv);
