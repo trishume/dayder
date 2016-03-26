@@ -5,9 +5,12 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
   <script type="text/javascript" src="script/main.js"></script>
   <style>
+    body {
+      font-family: sans-serif;
+    }
     h4 {
       font-family: sans-serif;
-      font-size: 10pt;
+      font-size: 8pt;
       margin: 5px 5px;
       width: 190px;
     }
@@ -29,10 +32,23 @@
       flex-direction: column;
       justify-content: space-between;
     }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #filter-box {
+      width: 800px;
+      height: 30px;
+    }
   </style>
 </head>
-<body>
+<body onload="init()">
   <div class="container">
+    <h1>dayter</h1>
+    <input type="text" id="filter-box" onchange="filterGraphs();" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();">
     <div id="graphs" class="graphs">
     </div>
   </div>

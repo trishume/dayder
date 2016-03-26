@@ -1,3 +1,5 @@
+var allRecords = null;
+
 function fetchArrayBuffer(url, callback) {
   var oReq = new XMLHttpRequest();
   oReq.open("GET", url, true);
@@ -99,7 +101,7 @@ function displayRecords(records, maxRecords) {
 
   for(var i = 0; i < numToDisplay; i++) {
     var label = document.getElementById("label-"+i);
-    label.innerText = maybeTrim(records[i].name,40);
+    label.innerText = maybeTrim(records[i].name,60);
     drawGraph(i, records[i].data);
   }
 }
@@ -128,19 +130,26 @@ function setNumberOfGraphs(n) {
       graphsDiv.appendChild(graphDiv);
     }
   } else if(delta < 0) {
-    for(var i = 0; i < delta; i++) {
+    for(var i = 0; i < -delta; i++) {
       graphsDiv.children[numPresent-1-i].remove();
     }
   }
 }
 
+function filterGraphs() {
+  var query = document.getElementById("filter-box").value;
+  var records = _.filter(allRecords, function(r) {
+    return r.name.includes(query);
+  });
+  displayRecords(records, 200);
+}
+
 function loadBtsf(dataBuf) {
-  var records = readBtsfFile(dataBuf);
-  displayRecords(records, 100);
+  allRecords = readBtsfFile(dataBuf);
+  filterGraphs();
 }
 
 function init() {
   fetchArrayBuffer("btsf/mortality.btsf", loadBtsf);
+  document.getElementById("filter-box").focus();
 }
-
-init();
