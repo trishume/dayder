@@ -152,6 +152,14 @@ function displayRecords(records, maxRecords) {
     label.innerText = maybeTrim(records[i].name,60);
     label.title = records[i].name;
 
+    var corrEl = document.getElementById("corr-"+i);
+    if(records[i].corr !== null) {
+      corrEl.style.display = "initial";
+      corrEl.innerText = "r = " + records[i].corr.toFixed(3);
+    } else {
+      corrEl.style.display = "none";
+    }
+
     var link = document.getElementById("btn-"+i);
     // needed because JS closures interact weirdly with loops
     (function(){
@@ -194,6 +202,7 @@ function setNumberOfGraphs(n) {
       var correlation = document.createElement("span");
       correlation.innerText = "r = 0.8";
       correlation.className = "correlation"
+      correlation.id = "corr-"+(numPresent+i);
       graphDiv.appendChild(correlation);
 
       graphsDiv.appendChild(graphDiv);
