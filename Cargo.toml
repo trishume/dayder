@@ -1,0 +1,7 @@
+[package]
+name = "dayder-fake"
+version = "0.1.0"
+authors = ["Marc Mailhot <mmm11105@gmail.com>"]
+
+[dependencies]
+byteorder = "0.5.1"
