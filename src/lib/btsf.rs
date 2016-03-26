@@ -14,7 +14,7 @@ pub struct BinaryTimeSeries {
     pub correlation: f32
 }
 
-pub fn read_btsf_file(f: &mut File) -> Vec<BinaryTimeSeries> {
+pub fn read_btsf_file<T: Read + Seek>(f: &mut T) -> Vec<BinaryTimeSeries> {
     f.seek(SeekFrom::Start(0)).unwrap();
     let mut series = Vec::<BinaryTimeSeries>::new();
     let version = f.read_u32::<LittleEndian>().unwrap();
