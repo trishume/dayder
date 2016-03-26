@@ -61,6 +61,37 @@ function readBtsfFile(dataBuf) {
 
 function loadBtsf(dataBuf) {
   var records = readBtsfFile(dataBuf);
+  setNumberOfGraphs(100);
+}
+
+// sets up the DOM with the right number of graph boxes
+function setNumberOfGraphs(n) {
+  var graphsDiv = document.getElementById("graphs");
+  var numPresent = graphsDiv.children.length;
+  var delta = n - numPresent;
+
+  if(delta > 0) {
+    for(var i = 0; i < delta; i++) {
+      var graphDiv = document.createElement("div");
+      graphDiv.className = "graph";
+
+      var label = document.createElement("h4");
+      label.id = "label-"+(numPresent+i);
+      label.innerText = "lol";
+      graphDiv.appendChild(label);
+
+      var canvas = document.createElement("canvas");
+      canvas.id = "canv-"+(numPresent+i);
+      canvas.height = 100;
+      canvas.width = 200;
+      graphDiv.appendChild(canvas);
+      graphsDiv.appendChild(graphDiv);
+    }
+  } else if(delta < 0) {
+    for(var i = 0; i < delta; i++) {
+      graphsDiv.children[numPresent-1-i].remove();
+    }
+  }
 }
 
 function init() {
