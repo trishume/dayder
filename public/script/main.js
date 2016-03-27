@@ -220,7 +220,7 @@ function filterGraphs() {
   var records = _.filter(allRecords, function(r) {
     return r.name.includes(query);
   });
-  displayRecords(records, 200);
+  displayRecords(records, 100);
 }
 
 function findCorrelations(record) {
