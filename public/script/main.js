@@ -1,6 +1,15 @@
 var allRecords = null;
 var normalizeYAxis = false;
 var curOverlay = null;
+var curRecords = null;
+
+function getMousePos(canvas, evt) {
+  var rect = canvas.getBoundingClientRect();
+  return {
+    x: evt.clientX - rect.left,
+    y: evt.clientY - rect.top
+  };
+}
 
 function fetchArrayBuffer(url, callback) {
   var oReq = new XMLHttpRequest();
@@ -198,6 +207,13 @@ function setNumberOfGraphs(n) {
       correlation.id = "corr-"+(numPresent+i);
       graphDiv.appendChild(correlation);
 
+      (function(){
+        var curI = (numPresent+i);
+        canvas.addEventListener('mousemove', function(evt) {
+          drawTooltip(canvas, graphNum, evt);
+        }, false);
+      })();
+
       graphsDiv.appendChild(graphDiv);
     }
   } else if(delta < 0) {
@@ -210,10 +226,10 @@ function setNumberOfGraphs(n) {
 function filterGraphs() {
   var query = document.getElementById("filter-box").value;
   normalizeYAxis = !document.getElementById("zeroYAxis").checked;
-  var records = _.filter(allRecords, function(r) {
+  curRecords = _.filter(allRecords, function(r) {
     return r.name.includes(query);
   });
-  displayRecords(records, 100);
+  displayRecords(curRecords, 100);
 }
 
 function findCorrelations(record) {
