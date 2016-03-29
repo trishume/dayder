@@ -1,5 +1,6 @@
 require "csv"
 require "pp"
+require "json"
 
 # Death codes
 codes = {}
@@ -29,6 +30,10 @@ end
 
 pp data.to_a.sample(100)
 p data.size
+
+# puts({"name" => data.to_a[0][0],
+#   "data" => data.to_a[0][1].map.with_index {|d,i| {t: Time.new(1999+i).to_i, v: d}},
+#   }.to_json)
 
 # ==== Write out file
 

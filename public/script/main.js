@@ -41,14 +41,7 @@ function readBtsfRecord(dataBuf, offset, H) {
     data.push({t: T, v: D});
   }
 
-  return {
-    size: H+L+N*8,
-    record: {
-      name: str,
-      data: data,
-      corr: C
-    }
-  };
+  return {size: H+L+N*8, record: {name: str, data: data, corr: C}};
 }
 
 function readBtsfFile(dataBuf) {
