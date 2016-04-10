@@ -27,10 +27,12 @@ fn main() {
         if input_charts.len() != 1 {
             return Ok(Response::with((status::BadRequest, "Please send a BTSF file with precisely one chart in it")))
         }
-        let result = lib::correlate::correlate(&input_charts[0]);
-        
+
+        let data_sets = lib::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap());
+        let result = lib::correlate::correlate(&input_charts[0], &data_sets[..]);
+
         let mut response_data: Vec<u8> = Vec::new();
-        lib::btsf::write_btsf_file(&result, &mut response_data);
+        lib::btsf::write_correlated_btsf_file(&result[..], &mut response_data);
 
         let contentType: Mime = "application/octet-stream".parse().unwrap();
         return Ok(Response::with((status::Ok, contentType, response_data)));

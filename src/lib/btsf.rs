@@ -10,7 +10,11 @@ pub struct Point {
 
 pub struct BinaryTimeSeries {
     pub name: String,
-    pub data: Vec<Point>,
+    pub data: Vec<Point>
+}
+
+pub struct CorrelatedTimeSeries<'a> {
+    pub series: &'a BinaryTimeSeries,
     pub correlation: f32
 }
 
@@ -48,15 +52,14 @@ pub fn read_btsf_file<T: Read + Seek>(f: &mut T) -> Vec<BinaryTimeSeries> {
         }
         series.push(BinaryTimeSeries{
             name: String::from(name),
-            data: data,
-            correlation: 0.0
+            data: data
         })
     }
 
     return series;
 }
 
-pub fn write_btsf_file<T: Write>(data: &Vec<BinaryTimeSeries>, output: &mut T){
+pub fn write_correlated_btsf_file<T: Write>(data: &[CorrelatedTimeSeries], output: &mut T){
     // Version Header, File Header Len, Rec Header Len
     output.write_u32::<LittleEndian>(2).unwrap();
     output.write_u32::<LittleEndian>(16).unwrap();
@@ -64,10 +67,11 @@ pub fn write_btsf_file<T: Write>(data: &Vec<BinaryTimeSeries>, output: &mut T){
 
     output.write_u32::<LittleEndian>(data.len() as u32);
 
-    for record in data {
+    for corr_record in data {
+        let record = corr_record.series;
         output.write_u32::<LittleEndian>(record.data.len() as u32);
         output.write_u32::<LittleEndian>(record.name.len() as u32);
-        output.write_f32::<LittleEndian>(record.correlation as f32);
+        output.write_f32::<LittleEndian>(corr_record.correlation as f32);
         output.write(&record.name.as_bytes());
         for i in 0..record.data.len() {
             output.write_i32::<LittleEndian>(record.data[i].t);
