@@ -1,4 +1,3 @@
-use std::iter;
 use lib::btsf::*;
 use stats;
 
