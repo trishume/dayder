@@ -7,6 +7,6 @@ authors = ["Marc Mailhot <mmm11105@gmail.com>"]
 byteorder = "0.5.1"
 streaming-stats = "0.1.27"
 iron = "0.3.0"
-router = "0.1.1"
 staticfile = "0.2.0"
 mount = "0.1.0"
+persistent = "0.1.0"
