@@ -3,14 +3,6 @@ var normalizeYAxis = false;
 var curOverlay = null;
 var curRecords = null;
 
-function getMousePos(canvas, evt) {
-  var rect = canvas.getBoundingClientRect();
-  return {
-    x: evt.clientX - rect.left,
-    y: evt.clientY - rect.top
-  };
-}
-
 function fetchArrayBuffer(url, callback) {
   var oReq = new XMLHttpRequest();
   oReq.open("GET", url, true);
@@ -107,12 +99,13 @@ function maybeTrim(name, len) {
   }
 }
 
-function drawGraphLine(ctx,w,h, data) {
+function drawGraphLine(ctx,w,h,data,trace) {
   var maxV = _.max(data, function(p) { return p.v; }).v;
   var minV = _.min(data, function(p) { return p.v; }).v;
   var maxT = _.max(data, function(p) { return p.t; }).t;
   var minT = _.min(data, function(p) { return p.t; }).t;
 
+  ctx.lineWidth = 1.0;
   ctx.beginPath();
   ctx.moveTo(0,h);
   for(var i = 0; i < data.length; i++) {
@@ -128,21 +121,41 @@ function drawGraphLine(ctx,w,h, data) {
     ctx.lineTo(x,h-y);
   }
   ctx.stroke();
+
+  if(trace !== null) {
+    var traceT = trace.x/w*(maxT-minT)+minT;
+    var closestPt = _.min(data, function(p) { return Math.abs(p.t - traceT); });
+
+    var x = (closestPt.t-minT)/(maxT-minT)*w;
+    ctx.strokeStyle = "#EF5350";
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.moveTo(x,h);
+    ctx.lineTo(x,0);
+    ctx.stroke();
+
+    ctx.fillStyle = "#000";
+    ctx.font = "15px sans-serif";
+    var textX = x+8;
+    var textW = ctx.measureText(closestPt.v).width;
+    if(textX+textW > w) {
+      textX = x - textW - 8;
+    }
+    ctx.fillText(closestPt.v, textX, trace.y);
+  }
 }
 
-function drawGraph(graphNum, data) {
-  var canvasEl = document.getElementById("canv-"+graphNum);
+function drawGraph(canvasEl, data, trace) {
   var ctx = canvasEl.getContext("2d");
-
   ctx.fillStyle = "white";
   ctx.fillRect(0,0,canvasEl.width,canvasEl.height);
 
   if(curOverlay !== null) {
     ctx.strokeStyle = "grey";
-    drawGraphLine(ctx,canvasEl.width,canvasEl.height, curOverlay);
+    drawGraphLine(ctx,canvasEl.width,canvasEl.height, curOverlay, null);
   }
   ctx.strokeStyle = "#2196F3";
-  drawGraphLine(ctx,canvasEl.width,canvasEl.height, data);
+  drawGraphLine(ctx,canvasEl.width,canvasEl.height, data, trace);
 }
 
 function displayRecords(records, maxRecords) {
@@ -171,7 +184,8 @@ function displayRecords(records, maxRecords) {
       }
     })();
 
-    drawGraph(i, records[i].data);
+    var canvasEl = document.getElementById("canv-"+i);
+    drawGraph(canvasEl, records[i].data, null);
   }
 }
 
@@ -209,8 +223,12 @@ function setNumberOfGraphs(n) {
 
       (function(){
         var curI = (numPresent+i);
+        var curCanvas = canvas;
         canvas.addEventListener('mousemove', function(evt) {
-          drawTooltip(canvas, graphNum, evt);
+          drawGraph(curCanvas, curRecords[curI].data, {x: evt.offsetX, y: evt.offsetY});
+        }, false);
+        canvas.addEventListener('mouseout', function(evt) {
+          drawGraph(curCanvas, curRecords[curI].data, null);
         }, false);
       })();
 
