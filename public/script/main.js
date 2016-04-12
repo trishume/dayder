@@ -3,6 +3,11 @@ var normalizeYAxis = false;
 var curOverlay = null;
 var curRecords = null;
 
+// http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
+function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 function fetchArrayBuffer(url, callback) {
   var oReq = new XMLHttpRequest();
   oReq.open("GET", url, true);
@@ -99,11 +104,9 @@ function maybeTrim(name, len) {
   }
 }
 
-function drawGraphLine(ctx,w,h,data,trace) {
+function drawGraphLine(ctx,w,h,minT,maxT,data,trace) {
   var maxV = _.max(data, function(p) { return p.v; }).v;
   var minV = _.min(data, function(p) { return p.v; }).v;
-  var maxT = _.max(data, function(p) { return p.t; }).t;
-  var minT = _.min(data, function(p) { return p.t; }).t;
 
   ctx.lineWidth = 1.0;
   ctx.beginPath();
@@ -135,13 +138,24 @@ function drawGraphLine(ctx,w,h,data,trace) {
     ctx.stroke();
 
     ctx.fillStyle = "#000";
-    ctx.font = "15px sans-serif";
     var textX = x+8;
-    var textW = ctx.measureText(closestPt.v).width;
+    var date = new Date(closestPt.t*1000);
+    var dateText = date.getFullYear() + "/" + (date.getMonth()+1);
+    var valText = numberWithCommas(closestPt.v);
+
+    var dateStyle = "10px sans-serif";
+    ctx.font = dateStyle;
+    var textW = ctx.measureText(dateText).width;
+
+    ctx.font = "15px sans-serif";
+    textW = Math.max(textW, ctx.measureText(valText).width);
     if(textX+textW > w) {
       textX = x - textW - 8;
     }
-    ctx.fillText(closestPt.v, textX, trace.y);
+    ctx.fillText(valText, textX, trace.y);
+    ctx.fillStyle = "#78909C"
+    ctx.font = dateStyle;
+    ctx.fillText(dateText, textX, trace.y-15);
   }
 }
 
@@ -150,12 +164,16 @@ function drawGraph(canvasEl, data, trace) {
   ctx.fillStyle = "white";
   ctx.fillRect(0,0,canvasEl.width,canvasEl.height);
 
+  var maxT = _.max(data, function(p) { return p.t; }).t;
+  var minT = _.min(data, function(p) { return p.t; }).t;
   if(curOverlay !== null) {
+    maxT = Math.max(maxT,_.max(curOverlay, function(p) { return p.t; }).t);
+    minT = Math.min(minT,_.min(curOverlay, function(p) { return p.t; }).t);
     ctx.strokeStyle = "grey";
-    drawGraphLine(ctx,canvasEl.width,canvasEl.height, curOverlay, null);
+    drawGraphLine(ctx,canvasEl.width,canvasEl.height,minT,maxT, curOverlay, null);
   }
   ctx.strokeStyle = "#2196F3";
-  drawGraphLine(ctx,canvasEl.width,canvasEl.height, data, trace);
+  drawGraphLine(ctx,canvasEl.width,canvasEl.height,minT,maxT, data, trace);
 }
 
 function displayRecords(records, maxRecords) {
