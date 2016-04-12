@@ -6,11 +6,12 @@ pub fn correlate<'a>(data: &BinaryTimeSeries, possibilities: &'a [BinaryTimeSeri
     let mut correlations = Vec::new();
 
     for poss in possibilities {
-        let (xs, ys) = pairinate(poss, &data);
-        correlations.push(CorrelatedTimeSeries{
-          series: poss,
-          correlation: pearson_correlation_coefficient(&xs, &ys) as f32
-        });
+        if let Some((xs, ys)) = pairinate(poss, &data) {
+            correlations.push(CorrelatedTimeSeries{
+                series: poss,
+                correlation: pearson_correlation_coefficient(&xs, &ys) as f32
+            });
+        }
     }
 
     correlations.sort_by(|btsa, btsb| btsb.correlation.partial_cmp(&btsa.correlation).unwrap());
