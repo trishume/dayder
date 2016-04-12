@@ -79,19 +79,19 @@ fn interpolate(base: &[Point], other: &[Point]) -> (Vec<f32>, Vec<f32>){
 
     for data_point in base {
         base_data.push(data_point.val);
-        while other[search_index + 1].t <= data_point.t{
+        while other[search_index].t < data_point.t{
             search_index += 1;
         }
         if other[search_index].t == data_point.t{
             other_data.push(other[search_index].val);
         }else{
             // We have to interpolate data
-            let time_offset = data_point.t - other[search_index].t;
-            let point_offset = other[search_index + 1].t - other[search_index].t;
+            let time_offset = data_point.t - other[search_index - 1].t;
+            let point_offset = other[search_index - 1].t - other[search_index].t;
             let interpolation_ratio: f32= (time_offset as f32) / (point_offset as f32);
 
-            let interpolated_data_point = (other[search_index].val * (1.0 - interpolation_ratio)) +
-                (other[search_index + 1].val * interpolation_ratio);
+            let interpolated_data_point = (other[search_index - 1].val * (1.0 - interpolation_ratio)) +
+                (other[search_index].val * interpolation_ratio);
 
             other_data.push(interpolated_data_point);
         }

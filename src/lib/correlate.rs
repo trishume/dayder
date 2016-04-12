@@ -6,13 +6,11 @@ pub fn correlate<'a>(data: &BinaryTimeSeries, possibilities: &'a [BinaryTimeSeri
     let mut correlations = Vec::new();
 
     for poss in possibilities {
-        let pairing = pairinate(poss, &data);
-        match pairing{
-            Some((xs, ys)) => correlations.push(CorrelatedTimeSeries{
+        if let Some((xs, ys)) = pairinate(poss, &data) {
+            correlations.push(CorrelatedTimeSeries{
                 series: poss,
                 correlation: pearson_correlation_coefficient(&xs, &ys) as f32
-            }),
-            _ => println!("Skipping non-overlapping dataset")
+            });
         }
     }
 
