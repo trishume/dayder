@@ -1,17 +1,27 @@
 use std::io::*;
 use std::str;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use std::cmp::Ordering;
 
+#[derive(PartialEq, PartialOrd, Clone)]
 pub struct Point {
     pub t: i32,
     pub val: f32
 }
+impl Eq for Point {}
+impl Ord for Point {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
 
+#[derive(PartialEq, PartialOrd, Eq, Ord, Clone)]
 pub struct BinaryTimeSeries {
     pub name: String,
     pub data: Vec<Point>
 }
 
+#[derive(Clone)]
 pub struct CorrelatedTimeSeries<'a> {
     pub series: &'a BinaryTimeSeries,
     pub correlation: f32

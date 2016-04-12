@@ -1,7 +1,7 @@
 use lib::btsf::*;
 use lib::stats::*;
 
-pub fn correlate<'a>(data: &BinaryTimeSeries, possibilities: &'a [BinaryTimeSeries]) -> Vec<CorrelatedTimeSeries<'a>>{
+pub fn correlate(data: &BinaryTimeSeries, possibilities: &'static [BinaryTimeSeries]) -> Vec<CorrelatedTimeSeries<'static>>{
     // let mut possibilities = read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap());
     let mut correlations = Vec::new();
 

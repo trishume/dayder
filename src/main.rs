@@ -4,6 +4,8 @@ extern crate iron;
 extern crate staticfile;
 extern crate mount;
 extern crate persistent;
+#[macro_use]
+extern crate lazy_static;
 mod lib;
 
 use std::fs::File;
@@ -15,10 +17,17 @@ use iron::mime::Mime;
 use mount::Mount;
 use staticfile::Static;
 use std::path::Path;
+use lib::caching::CorrelationCache;
 
 #[derive(Copy, Clone)]
-pub struct DataSets;
-impl Key for DataSets { type Value = Vec<lib::btsf::BinaryTimeSeries>; }
+pub struct CorrCache;
+impl Key for CorrCache { type Value = CorrelationCache; }
+
+lazy_static! {
+    static ref DATA_SETS: Vec<lib::btsf::BinaryTimeSeries> = {
+        lib::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap()).unwrap()
+    };
+}
 
 fn main() {
     fn request_handler(req: &mut Request) -> IronResult<Response>{
@@ -32,8 +41,9 @@ fn main() {
             return Ok(Response::with((status::BadRequest, "Please send a BTSF file with precisely one chart in it")))
         }
 
-        let data_sets = req.get::<persistent::Read<DataSets>>().unwrap();
-        let result = lib::correlate::correlate(&input_charts[0], &data_sets[..]);
+        let mutex = req.get::<persistent::Write<CorrCache>>().unwrap();
+        let mut cache = mutex.lock().unwrap();
+        let result = cache.correlate(&input_charts[0], &DATA_SETS[..]);
 
         let mut response_data: Vec<u8> = Vec::new();
         if let Err(e) = lib::btsf::write_correlated_btsf_file(&result[..], &mut response_data) {
@@ -49,9 +59,11 @@ fn main() {
         .mount("/", Static::new(Path::new("./public")))
         .mount("/find", request_handler);
 
-    let data_sets = lib::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap()).unwrap();
+    let corr_cache = CorrelationCache::new();
     let mut chain = iron::Chain::new(mount);
-    chain.link_before(persistent::Read::<DataSets>::one(data_sets));
+    chain.link_before(persistent::Write::<CorrCache>::one(corr_cache));
 
+    // This print statement is partially just to invoke the lazy static
+    println!("Serving up {} data sets!", DATA_SETS.len());
     Iron::new(chain).http("localhost:8080").unwrap();
 }
