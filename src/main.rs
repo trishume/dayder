@@ -41,9 +41,12 @@ fn main() {
             return Ok(Response::with((status::BadRequest, "Please send a BTSF file with precisely one chart in it")))
         }
 
-        let mutex = req.get::<persistent::Write<CorrCache>>().unwrap();
-        let mut cache = mutex.lock().unwrap();
-        let result = cache.correlate(&input_charts[0], &DATA_SETS[..]);
+
+        let result = {
+            let mutex = req.get::<persistent::Write<CorrCache>>().unwrap();
+            let mut cache = mutex.lock().unwrap();
+            cache.correlate(&input_charts[0], &DATA_SETS[..])
+        };
 
         let mut response_data: Vec<u8> = Vec::new();
         if let Err(e) = lib::btsf::write_correlated_btsf_file(&result[..], &mut response_data) {
