@@ -8,7 +8,7 @@ var reqCorrelationQuery = null;
 var curRecords = null;
 var curOverlay = null;
 
-
+var inFlightRequest = null;
 
 // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
 function numberWithCommas(x) {
@@ -286,22 +286,27 @@ function handleNewData(oEvent) {
   } else {
     console.log("Couldn't fetch file " + url);
   }
+  inFlightRequest = null;
 }
 
 function fetchCorrelationData(corrBuffer, filter) {
+  if(inFlightRequest !== null) inFlightRequest.abort();
   var xhr = new XMLHttpRequest();
   xhr.open("POST", "/find?"+encodeURIComponent(filter), true);
   xhr.responseType = "arraybuffer";
   xhr.onload = handleNewData;
   xhr.send(new DataView(corrBuffer));
+  inFlightRequest = xhr;
 }
 
 function fetchRawData(filter) {
+  if(inFlightRequest !== null) inFlightRequest.abort();
   var xhr = new XMLHttpRequest();
   xhr.open("GET", "/raw?"+encodeURIComponent(filter), true);
   xhr.responseType = "arraybuffer";
   xhr.onload = handleNewData;
   xhr.send(null);
+  inFlightRequest = xhr;
 }
 
 function updateFromServer() {
