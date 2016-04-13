@@ -19,6 +19,8 @@ use staticfile::Static;
 use std::path::Path;
 use lib::caching::CorrelationCache;
 
+const PER_PAGE : usize = 100;
+
 #[derive(Copy, Clone)]
 pub struct CorrCache;
 impl Key for CorrCache { type Value = CorrelationCache; }
@@ -30,7 +32,7 @@ lazy_static! {
 }
 
 fn main() {
-    fn request_handler(req: &mut Request) -> IronResult<Response>{
+    fn find_handler(req: &mut Request) -> IronResult<Response>{
         let mut buffer: Vec<u8> = Vec::new();
         req.body.read_to_end(&mut buffer).unwrap();
         let input_charts = match lib::btsf::read_btsf_file(&mut Cursor::new(&mut buffer)) {
@@ -48,8 +50,24 @@ fn main() {
             cache.correlate(&input_charts[0], &DATA_SETS[..])
         };
 
+        let filter : &str = req.url.query.as_ref().map(|x| &**x).unwrap_or("");
+        let filtered : Vec<lib::btsf::CorrelatedTimeSeries> = result.into_iter().filter(|s| s.series.name.contains(filter)).take(PER_PAGE).collect();
+
         let mut response_data: Vec<u8> = Vec::new();
-        if let Err(e) = lib::btsf::write_correlated_btsf_file(&result[..], &mut response_data) {
+        if let Err(e) = lib::btsf::write_correlated_btsf_file(&filtered[..], &mut response_data) {
+            return Err(IronError::new(e, status::InternalServerError));
+        }
+
+        let content_type: Mime = "application/octet-stream".parse().unwrap();
+        return Ok(Response::with((status::Ok, content_type, response_data)));
+    };
+
+    fn raw_handler(req: &mut Request) -> IronResult<Response>{
+        let filter : &str = req.url.query.as_ref().map(|x| &**x).unwrap_or("");
+        let result: Vec<&lib::btsf::BinaryTimeSeries> = DATA_SETS.iter().filter(|s| s.name.contains(filter)).take(PER_PAGE).collect();
+
+        let mut response_data: Vec<u8> = Vec::new();
+        if let Err(e) = lib::btsf::write_btsf_file(&result[..], &mut response_data) {
             return Err(IronError::new(e, status::InternalServerError));
         }
 
@@ -60,7 +78,8 @@ fn main() {
     let mut mount = Mount::new();
     mount
         .mount("/", Static::new(Path::new("./public")))
-        .mount("/find", request_handler);
+        .mount("/raw", raw_handler)
+        .mount("/find", find_handler);
 
     let corr_cache = CorrelationCache::new();
     let mut chain = iron::Chain::new(mount);

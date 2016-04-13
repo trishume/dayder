@@ -1,29 +1,20 @@
-var allRecords = null;
 var normalizeYAxis = false;
-var curOverlay = null;
+
+// Requested data
+var reqFilter = "";
+var reqCorrelationQuery = null;
+
+// Data currently being displayed
 var curRecords = null;
+var curOverlay = null;
+
+
 
 // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
 function numberWithCommas(x) {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-function fetchArrayBuffer(url, callback) {
-  var oReq = new XMLHttpRequest();
-  oReq.open("GET", url, true);
-  oReq.responseType = "arraybuffer";
-
-  oReq.onload = function (oEvent) {
-    var arrayBuffer = oReq.response; // Note: not oReq.responseText
-    if (arrayBuffer) {
-      callback(arrayBuffer);
-    } else {
-      console.log("Couldn't fetch file " + url);
-    }
-  };
-
-  oReq.send(null);
-}
 
 function readBtsfRecord(dataBuf, offset, H) {
   var dv = new DataView(dataBuf);
@@ -259,43 +250,69 @@ function setNumberOfGraphs(n) {
   }
 }
 
-function filterGraphs() {
-  var query = document.getElementById("filter-box").value;
+function redisplay() {
   normalizeYAxis = !document.getElementById("zeroYAxis").checked;
-  curRecords = _.filter(allRecords, function(r) {
-    return r.name.includes(query);
-  });
   displayRecords(curRecords, 100);
 }
 
+// ==== Changing requested data
+
 function findCorrelations(record) {
   var dataBuf = serializeBtsfRecord(record);
-  var xhr = new XMLHttpRequest;
-  xhr.open("POST", "/find", true);
-  xhr.responseType = "arraybuffer";
-  xhr.onload = function (oEvent) {
-    var arrayBuffer = xhr.response; // Note: not oReq.responseText
-    if (arrayBuffer) {
-      allRecords = readBtsfFile(arrayBuffer);
+  reqCorrelationQuery = dataBuf;
+  curOverlay = record.data;
 
-      curOverlay = record.data;
-      document.getElementById('filter-box').value = "";
-      document.getElementById('zeroYAxis').checked = false;
+  reqFilter = "";
+  document.getElementById('filter-box').value = "";
+  document.getElementById('zeroYAxis').checked = false;
 
-      filterGraphs();
-    } else {
-      console.log("Couldn't fetch file " + url);
-    }
-  };
-  xhr.send(new DataView(dataBuf));
+  updateFromServer();
 }
 
-function loadBtsf(dataBuf) {
-  allRecords = readBtsfFile(dataBuf);
-  filterGraphs();
+function filterGraphs() {
+  var filter = document.getElementById("filter-box").value;
+  if(filter === reqFilter) return;
+  reqFilter = filter;
+  updateFromServer();
+}
+
+// ==== Fetching requested data
+
+function handleNewData(oEvent) {
+  var arrayBuffer = oEvent.target.response; // Note: not oReq.responseText
+  if (arrayBuffer) {
+    curRecords = readBtsfFile(arrayBuffer);
+    redisplay();
+  } else {
+    console.log("Couldn't fetch file " + url);
+  }
+}
+
+function fetchCorrelationData(corrBuffer, filter) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "/find?"+encodeURIComponent(filter), true);
+  xhr.responseType = "arraybuffer";
+  xhr.onload = handleNewData;
+  xhr.send(new DataView(corrBuffer));
+}
+
+function fetchRawData(filter) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/raw?"+encodeURIComponent(filter), true);
+  xhr.responseType = "arraybuffer";
+  xhr.onload = handleNewData;
+  xhr.send(null);
+}
+
+function updateFromServer() {
+  if(reqCorrelationQuery !== null) {
+    fetchCorrelationData(reqCorrelationQuery, reqFilter);
+  } else {
+    fetchRawData(reqFilter);
+  }
 }
 
 function init() {
-  fetchArrayBuffer("btsf/mortality.btsf", loadBtsf);
+  updateFromServer();
   document.getElementById("filter-box").focus();
 }
