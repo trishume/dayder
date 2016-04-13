@@ -27,7 +27,10 @@ impl Key for CorrCache { type Value = CorrelationCache; }
 
 lazy_static! {
     static ref DATA_SETS: Vec<lib::btsf::BinaryTimeSeries> = {
-        lib::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap()).unwrap()
+        let mut all_data = lib::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap()).unwrap();
+        let file_2 = lib::btsf::read_btsf_file(&mut File::open("./btsf/canada_gdp.btsf").unwrap()).unwrap();
+        all_data.extend_from_slice(&file_2[..]); // Note: this does a copy, could be more efficient but we only do it at startup
+        all_data
     };
 }
 

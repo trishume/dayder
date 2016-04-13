@@ -286,6 +286,10 @@ function handleNewData(oEvent) {
   } else {
     console.log("Couldn't fetch file " + url);
   }
+
+  // TODO: maybe instead of cancelling in flight requests when new ones are sent out
+  // perhaps we can just always prefer results from requests that were *sent* more recently
+  // even if they arrive earlier due to weird networking things.
   inFlightRequest = null;
 }
 
