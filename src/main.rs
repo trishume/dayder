@@ -18,6 +18,7 @@ use mount::Mount;
 use staticfile::Static;
 use std::path::Path;
 use lib::caching::CorrelationCache;
+use std::ascii::AsciiExt;
 
 const PER_PAGE : usize = 100;
 
@@ -53,8 +54,8 @@ fn main() {
             cache.correlate(&input_charts[0], &DATA_SETS[..])
         };
 
-        let filter : &str = req.url.query.as_ref().map(|x| &**x).unwrap_or("");
-        let filtered : Vec<lib::btsf::CorrelatedTimeSeries> = result.into_iter().filter(|s| s.series.name.contains(filter)).take(PER_PAGE).collect();
+        let filter : String = req.url.query.as_ref().map(|x| &**x).unwrap_or("").to_ascii_lowercase();
+        let filtered : Vec<lib::btsf::CorrelatedTimeSeries> = result.into_iter().filter(|s| s.series.name.to_ascii_lowercase().contains(&filter)).take(PER_PAGE).collect();
 
         let mut response_data: Vec<u8> = Vec::new();
         if let Err(e) = lib::btsf::write_correlated_btsf_file(&filtered[..], &mut response_data) {
@@ -66,8 +67,8 @@ fn main() {
     };
 
     fn raw_handler(req: &mut Request) -> IronResult<Response>{
-        let filter : &str = req.url.query.as_ref().map(|x| &**x).unwrap_or("");
-        let result: Vec<&lib::btsf::BinaryTimeSeries> = DATA_SETS.iter().filter(|s| s.name.contains(filter)).take(PER_PAGE).collect();
+        let filter : String = req.url.query.as_ref().map(|x| &**x).unwrap_or("").to_ascii_lowercase();
+        let result: Vec<&lib::btsf::BinaryTimeSeries> = DATA_SETS.iter().filter(|s| s.name.to_ascii_lowercase().contains(&filter)).take(PER_PAGE).collect();
 
         let mut response_data: Vec<u8> = Vec::new();
         if let Err(e) = lib::btsf::write_btsf_file(&result[..], &mut response_data) {
