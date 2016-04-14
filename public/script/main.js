@@ -252,6 +252,11 @@ function setNumberOfGraphs(n) {
 
 function redisplay() {
   normalizeYAxis = !document.getElementById("zeroYAxis").checked;
+  if(reqCorrelationQuery !== null) {
+    document.getElementById("clearCorrButton").style.display = "inline";
+  } else {
+    document.getElementById("clearCorrButton").style.display = "none";
+  }
   displayRecords(curRecords, 100);
 }
 
@@ -273,6 +278,12 @@ function filterGraphs() {
   var filter = document.getElementById("filter-box").value;
   if(filter === reqFilter) return;
   reqFilter = filter;
+  updateFromServer();
+}
+
+function clearCorr() {
+  reqCorrelationQuery = null;
+  curOverlay = null;
   updateFromServer();
 }
 
