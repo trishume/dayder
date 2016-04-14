@@ -62,8 +62,8 @@ fn get_start_index(series: &BinaryTimeSeries, target: &BinaryTimeSeries) -> Opti
 fn get_end_index(series: &BinaryTimeSeries, target: &BinaryTimeSeries) -> Option<usize>{
     let mut end_index = series.data.len() - 1;
 
-    while series.data[end_index].t < target.data[target.data.len() - 1].t{
-        if end_index == 0{
+    while series.data[end_index].t > target.data[target.data.len() - 1].t{
+        if end_index == 0 {
             return None;
         }
         end_index -= 1;

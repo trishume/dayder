@@ -252,6 +252,11 @@ function setNumberOfGraphs(n) {
 
 function redisplay() {
   normalizeYAxis = !document.getElementById("zeroYAxis").checked;
+  if(reqCorrelationQuery !== null) {
+    document.getElementById("clearCorrButton").style.display = "inline";
+  } else {
+    document.getElementById("clearCorrButton").style.display = "none";
+  }
   displayRecords(curRecords, 100);
 }
 
@@ -276,6 +281,12 @@ function filterGraphs() {
   updateFromServer();
 }
 
+function clearCorr() {
+  reqCorrelationQuery = null;
+  curOverlay = null;
+  updateFromServer();
+}
+
 // ==== Fetching requested data
 
 function handleNewData(oEvent) {
@@ -286,6 +297,10 @@ function handleNewData(oEvent) {
   } else {
     console.log("Couldn't fetch file " + url);
   }
+
+  // TODO: maybe instead of cancelling in flight requests when new ones are sent out
+  // perhaps we can just always prefer results from requests that were *sent* more recently
+  // even if they arrive earlier due to weird networking things.
   inFlightRequest = null;
 }
 

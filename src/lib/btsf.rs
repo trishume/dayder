@@ -3,7 +3,7 @@ use std::str;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::cmp::Ordering;
 
-#[derive(PartialEq, PartialOrd, Clone)]
+#[derive(PartialEq, PartialOrd, Clone, Debug)]
 pub struct Point {
     pub t: i32,
     pub val: f32
@@ -15,7 +15,7 @@ impl Ord for Point {
     }
 }
 
-#[derive(PartialEq, PartialOrd, Eq, Ord, Clone)]
+#[derive(PartialEq, PartialOrd, Eq, Ord, Clone, Debug)]
 pub struct BinaryTimeSeries {
     pub name: String,
     pub data: Vec<Point>

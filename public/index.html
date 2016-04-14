@@ -11,8 +11,9 @@
       font-family: 'PT Sans';
       background: #fff;
     }
-   .graph h4 {
-       box-sizing: border-box;
+
+    .graph h4 {
+      box-sizing: border-box;
       font-family: sans-serif;
       font-size: 12pt;
       margin: 0px;
@@ -32,8 +33,8 @@
     .graphs {
       display: flex;
       flex-wrap: wrap;
-        justify-content: center;
-        color: #FFF;
+      justify-content: center;
+      color: #FFF;
     }
 
     .graph {
@@ -43,42 +44,43 @@
       flex-direction: column;
       background: #2196F3;
       justify-content: space-between;
-         box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
     }
 
     .graph img {
-        box-sizing: border-box;
-        position: absolute;
-        bottom: 10px;
-        right: 10px;
-        width: 50px;
-        height: 50px;
-        padding: 10px;
-        border-radius: 25px;
+      box-sizing: border-box;
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      width: 50px;
+      height: 50px;
+      padding: 10px;
+      border-radius: 25px;
       background: #42A5F5;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
-        transition: all 0.5s;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+      transition: all 0.5s;
     }
 
     .graph img:hover{
-       box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
     }
 
-   .graph img:active{
-         box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-        transition: all 0.2s;
-   }
+    .graph img:active{
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+      transition: all 0.2s;
+    }
 
    .graph .correlation {
-       position: absolute;
-       color: #555;
-       bottom: 10px;
-       left: 10px;
-       padding: 5px;
-       font-size: 10pt;
-       border-radius: 3px;
-       background-color: #eee;
-   }
+      position: absolute;
+      color: #555;
+      bottom: 10px;
+      left: 10px;
+      padding: 5px;
+      font-size: 10pt;
+      border-radius: 3px;
+      background-color: #eee;
+    }
+
     .container {
       display: flex;
       flex-direction: column;
@@ -95,8 +97,8 @@
       border: 0;
       webkit-box-shadow: none;
       box-shadow: none;
-        font-size: 24px;
-        color: #555;
+      font-size: 24px;
+      color: #555;
       border-bottom: 3px solid #555;
     }
 
@@ -104,11 +106,19 @@
       margin-top: 7px;
     }
 
-   .btsf-attribution {
-       position: absolute;
-       top: 40px;
-       left: 40px;
-   }
+    .controls > * {
+      padding: 5px 20px;
+    }
+
+    .button-link {
+      color: #42A5F5;
+    }
+
+    .btsf-attribution {
+      position: absolute;
+      top: 40px;
+      left: 40px;
+    }
   </style>
 </head>
 <body onload="init()">
@@ -120,6 +130,7 @@
         </header>
     <div class="controls">
         <label><input type="checkbox" id="zeroYAxis" onchange="redisplay();" checked> Include zero in Y axis</label>
+        <a href="javascript:clearCorr()" id="clearCorrButton" class="button-link" style="display: none;">clear correlation query</a>
     </div>
         <div id="graphs" class="graphs">
     </div>
