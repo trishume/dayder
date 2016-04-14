@@ -25,8 +25,9 @@ CSV.foreach("files.csv", col_sep: ';') do |row|
   file = "data/#{row[0].rstrip.gsub('\\','/')}"
   name = row[1].rstrip
   points = get_points(file)
+  points.sort_by! {|t,v| t }
 
-  f.print [points.length, name.length].pack("L*".freeze)
+  f.print [points.length, name.bytesize].pack("L*".freeze)
   f.print name
   points.each do |a|
     f.print a.pack("le".freeze)

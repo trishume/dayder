@@ -28,7 +28,7 @@ impl Key for CorrCache { type Value = CorrelationCache; }
 
 lazy_static! {
     static ref DATA_SETS: Vec<lib::btsf::BinaryTimeSeries> = {
-        let mut all_data = lib::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap()).unwrap();
+        let mut all_data = lib::btsf::read_btsf_file(&mut BufReader::new(File::open("./btsf/fred.btsf").unwrap())).unwrap();
         let file_2 = lib::btsf::read_btsf_file(&mut File::open("./btsf/canada_gdp.btsf").unwrap()).unwrap();
         all_data.extend_from_slice(&file_2[..]); // Note: this does a copy, could be more efficient but we only do it at startup
         all_data
@@ -54,6 +54,9 @@ fn main() {
             cache.correlate(&input_charts[0], &DATA_SETS[..])
         };
 
+        // TODO: URL decode query so you can search for spaces and it doesn't try to search for '%20'
+        // TODO: Faster filtering algorithm
+        // TODO: fuzzy matching
         let filter : String = req.url.query.as_ref().map(|x| &**x).unwrap_or("").to_ascii_lowercase();
         let filtered : Vec<lib::btsf::CorrelatedTimeSeries> = result.into_iter().filter(|s| s.series.name.to_ascii_lowercase().contains(&filter)).take(PER_PAGE).collect();
 

@@ -75,7 +75,7 @@ function serializeBtsfRecord(record) {
 
   // record
   dv.setUint32(16+4*0, record.data.length, true);
-  dv.setUint32(16+4*1, record.name.length, true);
+  dv.setUint32(16+4*1, nameBuf.length, true);
   for (var i = 0; i < nameBuf.length; i++) {
     dv.setUint8(6*4+i, nameBuf[i]);
   }
@@ -102,13 +102,14 @@ function drawGraphLine(ctx,w,h,minT,maxT,data,trace) {
   ctx.lineWidth = 1.0;
   ctx.beginPath();
   ctx.moveTo(0,h);
+  // TODO: don't render way more points than there are horizontal pixels in the graph
   for(var i = 0; i < data.length; i++) {
     var x = (data[i].t-minT)/(maxT-minT)*w;
     var yFrac;
     if(normalizeYAxis) {
       yFrac = (data[i].v-minV)/(maxV-minV);
     } else {
-      yFrac = (data[i].v)/(maxV);
+      yFrac = (data[i].v)/(maxV); // TODO: account for possible presence of negative numbers
     }
     var y = yFrac*(h-5)+2;
     if(i == 0) ctx.moveTo(x,h-y);

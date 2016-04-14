@@ -39,6 +39,7 @@ pub fn pairinate(a: &BinaryTimeSeries, b: &BinaryTimeSeries)
     let a_end = try_opt!(get_end_index(a, b));
     let b_end = try_opt!(get_end_index(b, a));
 
+    // TODO FIXME: slice ends sometimes are before starts
     if (a_end - a_start) >= (b_end - b_start) {
         // Only one point of overlap, cannot correlate
         if a_end - a_start == 0 {return None};
@@ -71,6 +72,7 @@ fn get_end_index(series: &BinaryTimeSeries, target: &BinaryTimeSeries) -> Option
     return Some(end_index)
 }
 
+// interpolate a point from 'other' for each point in 'base'
 fn interpolate(base: &[Point], other: &[Point]) -> (Vec<f32>, Vec<f32>){
     let mut search_index = 0;
 
@@ -79,12 +81,13 @@ fn interpolate(base: &[Point], other: &[Point]) -> (Vec<f32>, Vec<f32>){
 
     for data_point in base {
         base_data.push(data_point.val);
-        while other[search_index].t < data_point.t{
+        // TODO FIXME: out of bounds error
+        while other[search_index].t < data_point.t {
             search_index += 1;
         }
         if other[search_index].t == data_point.t{
             other_data.push(other[search_index].val);
-        }else{
+        } else {
             // We have to interpolate data
             let time_offset = data_point.t - other[search_index - 1].t;
             let point_offset = other[search_index - 1].t - other[search_index].t;
