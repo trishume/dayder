@@ -6,7 +6,7 @@ pub fn correlate(data: &BinaryTimeSeries, possibilities: &'static [BinaryTimeSer
     let mut correlations = Vec::new();
 
     for poss in possibilities {
-        if let Some((xs, ys)) = pairinate(poss, &data) {
+        if let Some((xs, ys)) = pairinate(&data, poss) {
             correlations.push(CorrelatedTimeSeries{
                 series: poss,
                 correlation: pearson_correlation_coefficient(&xs, &ys) as f32

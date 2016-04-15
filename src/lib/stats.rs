@@ -1,6 +1,8 @@
 use lib::btsf::*;
 use stats;
 
+const MIN_OVERLAP : usize = 5;
+
 macro_rules! try_opt {
     ($expr:expr) => (match $expr {
         ::std::option::Option::Some(val) => val,
@@ -31,72 +33,44 @@ pub fn pearson_correlation_coefficient(xs: &Vec<f32>, ys: &Vec<f32>) -> f64{
     return final_val;
 }
 
-pub fn pairinate(a: &BinaryTimeSeries, b: &BinaryTimeSeries)
+pub fn pairinate(base: &BinaryTimeSeries, other: &BinaryTimeSeries)
                  -> Option<(Vec<f32>, Vec<f32>)>{
-
-    let a_start = try_opt!(get_start_index(a, b));
-    let b_start = try_opt!(get_start_index(b, a));
-    let a_end = try_opt!(get_end_index(a, b));
-    let b_end = try_opt!(get_end_index(b, a));
-
-    // TODO FIXME: slice ends sometimes are before starts
-    if (a_end - a_start) >= (b_end - b_start) {
-        // Only one point of overlap, cannot correlate
-        if a_end - a_start == 0 {return None};
-        return Some(interpolate(&a.data[a_start .. a_end], &b.data[..]));
-    }else{
-        return Some(interpolate(&b.data[b_start .. b_end], &a.data[..]));
-    }
+    if base.data.len() < MIN_OVERLAP || other.data.len() < MIN_OVERLAP { return None; }
+    let (bs, os) = interpolate(&base.data[..], &other.data[..]);
+    if bs.len() < MIN_OVERLAP { return None; }
+    return Some((bs, os));
 }
 
-fn get_start_index(series: &BinaryTimeSeries, target: &BinaryTimeSeries) -> Option<usize>{
-    let mut start_index = 0;
-    while series.data[start_index].t < target.data[0].t{
-        start_index += 1;
-        if start_index >= series.data.len() {
-            return None;
-        }
-    }
-    return Some(start_index);
-}
-
-fn get_end_index(series: &BinaryTimeSeries, target: &BinaryTimeSeries) -> Option<usize>{
-    let mut end_index = series.data.len() - 1;
-
-    while series.data[end_index].t > target.data[target.data.len() - 1].t{
-        if end_index == 0 {
-            return None;
-        }
-        end_index -= 1;
-    }
-    return Some(end_index)
-}
-
-// interpolate a point from 'other' for each point in 'base'
-fn interpolate(base: &[Point], other: &[Point]) -> (Vec<f32>, Vec<f32>){
-    let mut search_index = 0;
-
+// interpolate a point from 'other' for as many points as possible in 'base'
+fn interpolate(base: &[Point], other: &[Point]) -> (Vec<f32>, Vec<f32>) {
+    assert!(other.len() > 0);
     let mut base_data = Vec::<f32>::new();
     let mut other_data = Vec::<f32>::new();
 
+    // TODO: early exit on cases where there is bound to be nothing productive
+    let mut search_index = 0;
     for data_point in base {
-        base_data.push(data_point.val);
-        // TODO FIXME: out of bounds error
-        while other[search_index].t < data_point.t {
+        // advance search_index as far as possible without putting it past the base data point
+        // condition: not already past it or at it, not the last point, and the next point isn't past it
+        while other[search_index].t < data_point.t && search_index < (other.len() - 1) && other[search_index+1].t <= data_point.t {
             search_index += 1;
         }
+
         if other[search_index].t == data_point.t{
             other_data.push(other[search_index].val);
-        } else {
+            base_data.push(data_point.val);
+        } else if search_index < (other.len() - 1) && other[search_index].t < data_point.t {
+            assert!(other[search_index+1].t >= data_point.t);
             // We have to interpolate data
-            let time_offset = data_point.t - other[search_index - 1].t;
-            let point_offset = other[search_index - 1].t - other[search_index].t;
+            let time_offset = data_point.t - other[search_index].t;
+            let point_offset = other[search_index+1].t - other[search_index].t;
             let interpolation_ratio: f32= (time_offset as f32) / (point_offset as f32);
 
-            let interpolated_data_point = (other[search_index - 1].val * (1.0 - interpolation_ratio)) +
-                (other[search_index].val * interpolation_ratio);
+            let interpolated_data_point = (other[search_index].val * (1.0 - interpolation_ratio)) +
+                (other[search_index+1].val * interpolation_ratio);
 
             other_data.push(interpolated_data_point);
+            base_data.push(data_point.val);
         }
     }
 
