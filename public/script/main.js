@@ -10,11 +10,17 @@ var curOverlay = null;
 
 var inFlightRequest = null;
 
-// http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
-// fix this to output decimals correctly
-function numberWithCommas(x) {
-    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
+// http://stackoverflow.com/questions/149055/how-can-i-format-numbers-as-money-in-javascript
+Number.prototype.formatNice = function(c, d, t){
+  var n = this,
+      c = isNaN(c = Math.abs(c)) ? 2 : c,
+      d = d == undefined ? "." : d,
+      t = t == undefined ? "," : t,
+      s = n < 0 ? "-" : "",
+      i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "",
+      j = (j = i.length) > 3 ? j % 3 : 0;
+     return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+};
 
 
 function readBtsfRecord(dataBuf, offset, H) {
@@ -134,7 +140,7 @@ function drawGraphLine(ctx,w,h,minT,maxT,data,trace) {
     var textX = x+8;
     var date = new Date(closestPt.t*1000);
     var dateText = date.getFullYear() + "/" + (date.getMonth()+1);
-    var valText = numberWithCommas(closestPt.v);
+    var valText = (closestPt.v).formatNice(2);
 
     var dateStyle = "10px sans-serif";
     ctx.font = dateStyle;
