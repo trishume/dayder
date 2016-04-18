@@ -1,30 +1,35 @@
 use lib::btsf::*;
-use stats;
 
 const MIN_OVERLAP : usize = 5;
 
-macro_rules! try_opt {
-    ($expr:expr) => (match $expr {
-        ::std::option::Option::Some(val) => val,
-        ::std::option::Option::None => return None
-    })
-}
-
 pub fn pearson_correlation_coefficient(xs: &Vec<f32>, ys: &Vec<f32>) -> f64{
-    let x_avg = stats::mean(xs.iter().map(|x| x.clone()));
-    let x_dev = stats::stddev(xs.iter().map(|x| x.clone()));
-    let y_avg = stats::mean(ys.iter().map(|y| y.clone()));
-    let y_dev = stats::stddev(ys.iter().map(|y| y.clone()));
     let n = xs.len();
 
-    let mut rval: f64 = 0.0;
-    for i in 0..n{
-        rval += (((xs[i] as f64) - x_avg) / x_dev) * (((ys[i] as f64) - y_avg) / y_dev);
+    let mut sum_xy: f64 = 0.0;
+    let mut sum_xx: f64 = 0.0;
+    let mut sum_yy: f64 = 0.0;
+    let mut sum_x: f64 = 0.0;
+    let mut sum_y: f64 = 0.0;
+    for i in 0..n {
+        sum_xy += (xs[i] as f64) * (ys[i] as f64);
+        sum_xx += (xs[i] as f64) * (xs[i] as f64);
+        sum_yy += (ys[i] as f64) * (ys[i] as f64);
+        sum_x += xs[i] as f64;
+        sum_y += ys[i] as f64;
+    }
+    let x_avg = sum_x / (n as f64);
+    let y_avg = sum_y / (n as f64);
+
+    let denom = (sum_xx - (n as f64) * (x_avg*x_avg)).sqrt() * (sum_yy - (n as f64) * (y_avg*y_avg)).sqrt();
+
+    // this is to guard against series that are flat lines and thus might correlate with anything, added when needed with a previous formula
+    // TODO this may not fire due to floating point error, it may not even be necessary anymore
+    if denom == 0.0 {
+        return 0.0;
     }
 
-    let lval: f64 = 1.0 / ((n as f64) - 1.0);
-
-    let final_val = rval * lval;
+    let numerator = sum_xy - (sum_x * y_avg);
+    let final_val = numerator / denom;
 
     if final_val.is_nan() {
         return 0.0;

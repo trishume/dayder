@@ -1,5 +1,4 @@
 extern crate byteorder;
-extern crate stats;
 extern crate iron;
 extern crate staticfile;
 extern crate mount;
