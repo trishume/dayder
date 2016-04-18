@@ -103,14 +103,22 @@ function maybeTrim(name, len) {
 }
 
 function drawGraphLine(ctx,w,h,minT,maxT,data,trace) {
-  var maxV = _.max(data, function(p) { return p.v; }).v;
-  var minV = _.min(data, function(p) { return p.v; }).v;
+  // TODO: find start and end index of overlap and use that to optimize maxV, minV and iteration
+  var maxV = _.max(data, function(p) {
+    if(p.t < minT || p.t > maxT) return -Infinity;
+    return p.v;
+  }).v;
+  var minV = _.min(data, function(p) {
+    if(p.t < minT || p.t > maxT) return Infinity;
+    return p.v;
+  }).v;
 
   ctx.lineWidth = 1.0;
   ctx.beginPath();
-  ctx.moveTo(0,h);
+  var drawnFirst = false;
   // TODO: don't render way more points than there are horizontal pixels in the graph
   for(var i = 0; i < data.length; i++) {
+    if((((i+1) < data.length) && data[i].t < minT) || ((i-1) > 0 && data[i-1].t > maxT)) continue;
     var x = (data[i].t-minT)/(maxT-minT)*w;
     var yFrac;
     if(normalizeYAxis) {
@@ -119,7 +127,10 @@ function drawGraphLine(ctx,w,h,minT,maxT,data,trace) {
       yFrac = (data[i].v)/(maxV); // TODO: account for possible presence of negative numbers
     }
     var y = yFrac*(h-5)+2;
-    if(i == 0) ctx.moveTo(x,h-y);
+    if(drawnFirst === false) {
+      ctx.moveTo(x,h-y);
+      drawnFirst = true;
+    }
     ctx.lineTo(x,h-y);
   }
   ctx.stroke();
@@ -128,7 +139,7 @@ function drawGraphLine(ctx,w,h,minT,maxT,data,trace) {
     var traceT = trace.x/w*(maxT-minT)+minT;
     var closestPt = _.min(data, function(p) { return Math.abs(p.t - traceT); });
 
-    var x = (closestPt.t-minT)/(maxT-minT)*w;
+    var x = Math.max(0, Math.min(w, (closestPt.t-minT)/(maxT-minT)*w));
     ctx.strokeStyle = "#EF5350";
     ctx.lineWidth = 2.0;
     ctx.beginPath();
@@ -166,8 +177,8 @@ function drawGraph(canvasEl, data, trace) {
   var maxT = _.max(data, function(p) { return p.t; }).t;
   var minT = _.min(data, function(p) { return p.t; }).t;
   if(curOverlay !== null) {
-    maxT = Math.max(maxT,_.max(curOverlay, function(p) { return p.t; }).t);
-    minT = Math.min(minT,_.min(curOverlay, function(p) { return p.t; }).t);
+    maxT = Math.min(maxT,_.max(curOverlay, function(p) { return p.t; }).t);
+    minT = Math.max(minT,_.min(curOverlay, function(p) { return p.t; }).t);
     ctx.strokeStyle = "grey";
     drawGraphLine(ctx,canvasEl.width,canvasEl.height,minT,maxT, curOverlay, null);
   }
