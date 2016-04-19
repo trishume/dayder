@@ -27,9 +27,8 @@ pub struct CorrelatedTimeSeries<'a> {
     pub correlation: f32
 }
 
-pub fn read_btsf_file<T: Read + Seek>(f: &mut T) -> Result<Vec<BinaryTimeSeries>> {
+pub fn read_btsf_file<T: Read + Seek>(f: &mut T, series: &mut Vec<BinaryTimeSeries>) -> Result<usize> {
     try!(f.seek(SeekFrom::Start(0)));
-    let mut series = Vec::<BinaryTimeSeries>::new();
     let _ = try!(f.read_u32::<LittleEndian>());
     let file_header_len = try!(f.read_u32::<LittleEndian>());
     let rec_header_len = try!(f.read_u32::<LittleEndian>());
@@ -42,6 +41,7 @@ pub fn read_btsf_file<T: Read + Seek>(f: &mut T) -> Result<Vec<BinaryTimeSeries>
     // println!("Rec Header Len: {}", rec_header_len);
     // println!("Num Records: {}", num_records);
 
+    series.reserve(num_records as usize);
     for _ in 0..num_records {
         let n = try!(f.read_u32::<LittleEndian>());
         let name_length = try!(f.read_u32::<LittleEndian>());
@@ -68,7 +68,7 @@ pub fn read_btsf_file<T: Read + Seek>(f: &mut T) -> Result<Vec<BinaryTimeSeries>
         })
     }
 
-    return Ok(series);
+    return Ok(num_records as usize);
 }
 
 pub fn write_btsf_file<T: Write>(data: &[&BinaryTimeSeries], output: &mut T) -> Result<()> {

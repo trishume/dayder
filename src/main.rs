@@ -1,5 +1,4 @@
 extern crate byteorder;
-extern crate stats;
 extern crate iron;
 extern crate staticfile;
 extern crate mount;
@@ -28,9 +27,12 @@ impl Key for CorrCache { type Value = CorrelationCache; }
 
 lazy_static! {
     static ref DATA_SETS: Vec<lib::btsf::BinaryTimeSeries> = {
-        let mut all_data = lib::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap()).unwrap();
-        let file_2 = lib::btsf::read_btsf_file(&mut File::open("./btsf/canada_gdp.btsf").unwrap()).unwrap();
-        all_data.extend_from_slice(&file_2[..]); // Note: this does a copy, could be more efficient but we only do it at startup
+        let mut all_data = Vec::new();
+        lib::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap(), &mut all_data).unwrap();
+        lib::btsf::read_btsf_file(&mut File::open("./btsf/canada_gdp.btsf").unwrap(), &mut all_data).unwrap();
+        if Path::new("./btsf/fred.btsf").exists() {
+            lib::btsf::read_btsf_file(&mut BufReader::new(File::open("./btsf/fred.btsf").unwrap()), &mut all_data).unwrap();
+        }
         all_data
     };
 }
@@ -39,9 +41,9 @@ fn main() {
     fn find_handler(req: &mut Request) -> IronResult<Response>{
         let mut buffer: Vec<u8> = Vec::new();
         req.body.read_to_end(&mut buffer).unwrap();
-        let input_charts = match lib::btsf::read_btsf_file(&mut Cursor::new(&mut buffer)) {
-            Ok(charts) => charts,
-            Err(e) => return Err(IronError::new(e, status::BadRequest)),
+        let mut input_charts = Vec::with_capacity(1);
+        if let Err(e) = lib::btsf::read_btsf_file(&mut Cursor::new(&mut buffer), &mut input_charts) {
+            return Err(IronError::new(e, status::BadRequest))
         };
         if input_charts.len() != 1 {
             return Ok(Response::with((status::BadRequest, "Please send a BTSF file with precisely one chart in it")))
@@ -54,6 +56,9 @@ fn main() {
             cache.correlate(&input_charts[0], &DATA_SETS[..])
         };
 
+        // TODO: URL decode query so you can search for spaces and it doesn't try to search for '%20'
+        // TODO: Faster filtering algorithm
+        // TODO: fuzzy matching
         let filter : String = req.url.query.as_ref().map(|x| &**x).unwrap_or("").to_ascii_lowercase();
         let filtered : Vec<lib::btsf::CorrelatedTimeSeries> = result.into_iter().filter(|s| s.series.name.to_ascii_lowercase().contains(&filter)).take(PER_PAGE).collect();
 
