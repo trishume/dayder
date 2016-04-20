@@ -8,7 +8,9 @@ var reqCorrelationQuery = null;
 var curRecords = null;
 var curOverlay = null;
 
-var inFlightRequest = null;
+var nextSeqNum = 1;
+var displayingSeqNum = 0;
+
 
 // http://stackoverflow.com/questions/149055/how-can-i-format-numbers-as-money-in-javascript
 Number.prototype.formatNice = function(c, d, t){
@@ -308,7 +310,11 @@ function clearCorr() {
 
 // ==== Fetching requested data
 
-function handleNewData(oEvent) {
+function handleNewData(oEvent, seqNum) {
+  // ignore out of order responses
+  if(seqNum <= displayingSeqNum) return;
+  displayingSeqNum = seqNum;
+
   var arrayBuffer = oEvent.target.response; // Note: not oReq.responseText
   if (arrayBuffer) {
     curRecords = readBtsfFile(arrayBuffer);
@@ -316,39 +322,29 @@ function handleNewData(oEvent) {
   } else {
     console.log("Couldn't fetch file " + url);
   }
-
-  // TODO: maybe instead of cancelling in flight requests when new ones are sent out
-  // perhaps we can just always prefer results from requests that were *sent* more recently
-  // even if they arrive earlier due to weird networking things.
-  inFlightRequest = null;
 }
 
-function fetchCorrelationData(corrBuffer, filter) {
-  if(inFlightRequest !== null) inFlightRequest.abort();
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", "/find?"+encodeURIComponent(filter), true);
-  xhr.responseType = "arraybuffer";
-  xhr.onload = handleNewData;
-  xhr.send(new DataView(corrBuffer));
-  inFlightRequest = xhr;
-}
+function fetchData(filter, corrBuffer) {
+  var thisRequest = nextSeqNum;
+  nextSeqNum += 1;
 
-function fetchRawData(filter) {
-  if(inFlightRequest !== null) inFlightRequest.abort();
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", "/raw?"+encodeURIComponent(filter), true);
+  var endpoint = (corrBuffer !== null) ? "/find?" : "/raw?";
+  xhr.open("POST", endpoint+encodeURIComponent(filter), true);
   xhr.responseType = "arraybuffer";
-  xhr.onload = handleNewData;
-  xhr.send(null);
-  inFlightRequest = xhr;
+  xhr.onload = function(oEvent) {
+    handleNewData(oEvent, thisRequest);
+  }
+
+  if(corrBuffer !== null) {
+    xhr.send(new DataView(corrBuffer));
+  } else {
+    xhr.send(null);
+  }
 }
 
 function updateFromServer() {
-  if(reqCorrelationQuery !== null) {
-    fetchCorrelationData(reqCorrelationQuery, reqFilter);
-  } else {
-    fetchRawData(reqFilter);
-  }
+  fetchData(reqFilter, reqCorrelationQuery);
 }
 
 function init() {
