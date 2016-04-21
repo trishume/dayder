@@ -30,8 +30,8 @@ lazy_static! {
         let mut all_data = Vec::new();
         lib::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap(), &mut all_data).unwrap();
         lib::btsf::read_btsf_file(&mut File::open("./btsf/canada_gdp.btsf").unwrap(), &mut all_data).unwrap();
-        if Path::new("./btsf/fred.btsf").exists() {
-            lib::btsf::read_btsf_file(&mut BufReader::new(File::open("./btsf/fred.btsf").unwrap()), &mut all_data).unwrap();
+        if Path::new("./btsf/fred-small.btsf").exists() {
+            lib::btsf::read_btsf_file(&mut BufReader::new(File::open("./btsf/fred-small.btsf").unwrap()), &mut all_data).unwrap();
         }
         all_data
     };
