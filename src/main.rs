@@ -3,6 +3,7 @@ extern crate iron;
 extern crate staticfile;
 extern crate mount;
 extern crate persistent;
+extern crate url;
 #[macro_use]
 extern crate lazy_static;
 mod lib;
@@ -18,6 +19,7 @@ use staticfile::Static;
 use std::path::Path;
 use lib::caching::CorrelationCache;
 use std::ascii::AsciiExt;
+use url::percent_encoding::lossy_utf8_percent_decode;
 
 const PER_PAGE : usize = 100;
 
@@ -35,6 +37,11 @@ lazy_static! {
         }
         all_data
     };
+}
+
+fn filter_text(req: &Request) -> String {
+    let filter_query = req.url.query.as_ref().map(|x| &**x).unwrap_or("");
+    lossy_utf8_percent_decode(filter_query.as_ref()).to_ascii_lowercase()
 }
 
 fn main() {
@@ -56,10 +63,9 @@ fn main() {
             cache.correlate(&input_charts[0], &DATA_SETS[..])
         };
 
-        // TODO: URL decode query so you can search for spaces and it doesn't try to search for '%20'
         // TODO: Faster filtering algorithm
         // TODO: fuzzy matching
-        let filter : String = req.url.query.as_ref().map(|x| &**x).unwrap_or("").to_ascii_lowercase();
+        let filter : String = filter_text(req);
         let filtered : Vec<lib::btsf::CorrelatedTimeSeries> = result.into_iter().filter(|s| s.series.name.to_ascii_lowercase().contains(&filter)).take(PER_PAGE).collect();
 
         let mut response_data: Vec<u8> = Vec::new();
@@ -72,7 +78,7 @@ fn main() {
     };
 
     fn raw_handler(req: &mut Request) -> IronResult<Response>{
-        let filter : String = req.url.query.as_ref().map(|x| &**x).unwrap_or("").to_ascii_lowercase();
+        let filter : String = filter_text(req);
         let result: Vec<&lib::btsf::BinaryTimeSeries> = DATA_SETS.iter().filter(|s| s.name.to_ascii_lowercase().contains(&filter)).take(PER_PAGE).collect();
 
         let mut response_data: Vec<u8> = Vec::new();
