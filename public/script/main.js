@@ -103,22 +103,24 @@ function maybeTrim(name, len) {
 }
 
 function drawGraphLine(ctx,w,h,minT,maxT,data,trace) {
-  // TODO: find start and end index of overlap and use that to optimize maxV, minV and iteration
-  var maxV = _.max(data, function(p) {
-    if(p.t < minT || p.t > maxT) return -Infinity;
-    return p.v;
-  }).v;
-  var minV = _.min(data, function(p) {
-    if(p.t < minT || p.t > maxT) return Infinity;
-    return p.v;
-  }).v;
+  var startI = _.findIndex(data, function(p) { return p.t >= minT });
+  var endI = _.findLastIndex(data, function(p) { return p.t <= maxT});
+  if(startI > 0 && data[startI].t > minT) startI--;
+  if(endI < data.length-1 && data[endI].t < maxT) endI++;
+
+  var minV = Infinity;
+  var maxV = -Infinity;
+  for(var i = startI; i <= endI; i++) {
+    var v = data[i].v;
+    if(v > maxV) { maxV = v; }
+    if(v < minV) { minV = v; }
+  }
 
   ctx.lineWidth = 1.0;
   ctx.beginPath();
   var drawnFirst = false;
   // TODO: don't render way more points than there are horizontal pixels in the graph
-  for(var i = 0; i < data.length; i++) {
-    if((((i+1) < data.length) && data[i].t < minT) || ((i-1) > 0 && data[i-1].t > maxT)) continue;
+  for(var i = startI; i <= endI; i++) {
     var x = (data[i].t-minT)/(maxT-minT)*w;
     var yFrac;
     if(normalizeYAxis) {
