@@ -119,8 +119,14 @@ function drawGraphLine(ctx,w,h,minT,maxT,data,trace) {
   ctx.lineWidth = 1.0;
   ctx.beginPath();
   var drawnFirst = false;
-  // TODO: don't render way more points than there are horizontal pixels in the graph
-  for(var i = startI; i <= endI; i++) {
+
+  // don't render way too many points, this doesn't trigger often
+  var jump = 1;
+  if(endI - startI > w) {
+    jump = Math.floor((endI-startI)/w);
+  }
+
+  for(var i = startI; i <= endI; i += jump) {
     var x = (data[i].t-minT)/(maxT-minT)*w;
     var yFrac;
     if(normalizeYAxis) {
