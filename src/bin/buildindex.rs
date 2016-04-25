@@ -7,7 +7,7 @@ use std::fs::File;
 use std::io::{BufWriter, BufReader};
 use std::path::Path;
 use std::ascii::AsciiExt;
-use fst::{IntoStreamer, Streamer, Map, MapBuilder, Result};
+use fst::{MapBuilder, Result};
 
 lazy_static! {
     static ref DATA_SETS: Vec<dayder::btsf::BinaryTimeSeries> = {
@@ -25,11 +25,22 @@ fn build_index() -> Result<()> {
     // This is where we'll write our map to.
     let mut wtr = BufWriter::new(try!(File::create("btsf/index.fst")));
 
+    // Sort the data in preparation of adding it to the map
+    let mut data : Vec<(usize, String)> = DATA_SETS.iter().map(|x| x.name.to_ascii_lowercase()).enumerate().collect();
+    data.sort_by(|a,b| a.1.cmp(&b.1));
+    println!("Sorted data, creating map file...");
+
     // Create a builder that can be used to insert new key-value pairs.
     let mut build = try!(MapBuilder::new(wtr));
-    build.insert("bruce", 1).unwrap();
-    build.insert("clarence", 2).unwrap();
-    build.insert("stevie", 3).unwrap();
+
+    let mut last_s : String = String::from("");
+    for (i,s) in data.into_iter() {
+        // println!("inserting {:?} at {} {:?}", s, i, last_s);
+        if s != last_s {
+            build.insert(&s, i as u64).unwrap();
+        }
+        last_s = s;
+    }
 
     // Finish construction of the map and flush its contents to disk.
     try!(build.finish());
