@@ -1,6 +1,6 @@
 extern crate lru_time_cache;
-use lib::btsf::*;
-use lib::correlate::*;
+use btsf::*;
+use correlate::*;
 
 pub struct CorrelationCache {
   lru: lru_time_cache::LruCache<BinaryTimeSeries, Vec<CorrelatedTimeSeries<'static>>>

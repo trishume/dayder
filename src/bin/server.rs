@@ -4,9 +4,10 @@ extern crate staticfile;
 extern crate mount;
 extern crate persistent;
 extern crate url;
+extern crate fst;
 #[macro_use]
 extern crate lazy_static;
-mod lib;
+extern crate dayder;
 
 use std::fs::File;
 use std::io::*;
@@ -17,7 +18,7 @@ use iron::mime::Mime;
 use mount::Mount;
 use staticfile::Static;
 use std::path::Path;
-use lib::caching::CorrelationCache;
+use dayder::caching::CorrelationCache;
 use std::ascii::AsciiExt;
 use url::percent_encoding::lossy_utf8_percent_decode;
 
@@ -28,12 +29,12 @@ pub struct CorrCache;
 impl Key for CorrCache { type Value = CorrelationCache; }
 
 lazy_static! {
-    static ref DATA_SETS: Vec<lib::btsf::BinaryTimeSeries> = {
+    static ref DATA_SETS: Vec<dayder::btsf::BinaryTimeSeries> = {
         let mut all_data = Vec::new();
-        lib::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap(), &mut all_data).unwrap();
-        lib::btsf::read_btsf_file(&mut File::open("./btsf/canada_gdp.btsf").unwrap(), &mut all_data).unwrap();
+        dayder::btsf::read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap(), &mut all_data).unwrap();
+        dayder::btsf::read_btsf_file(&mut File::open("./btsf/canada_gdp.btsf").unwrap(), &mut all_data).unwrap();
         if Path::new("./btsf/fred-small.btsf").exists() {
-            lib::btsf::read_btsf_file(&mut BufReader::new(File::open("./btsf/fred-small.btsf").unwrap()), &mut all_data).unwrap();
+            dayder::btsf::read_btsf_file(&mut BufReader::new(File::open("./btsf/fred-small.btsf").unwrap()), &mut all_data).unwrap();
         }
         all_data
     };
@@ -49,7 +50,7 @@ fn main() {
         let mut buffer: Vec<u8> = Vec::new();
         req.body.read_to_end(&mut buffer).unwrap();
         let mut input_charts = Vec::with_capacity(1);
-        if let Err(e) = lib::btsf::read_btsf_file(&mut Cursor::new(&mut buffer), &mut input_charts) {
+        if let Err(e) = dayder::btsf::read_btsf_file(&mut Cursor::new(&mut buffer), &mut input_charts) {
             return Err(IronError::new(e, status::BadRequest))
         };
         if input_charts.len() != 1 {
@@ -66,10 +67,10 @@ fn main() {
         // TODO: Faster filtering algorithm
         // TODO: fuzzy matching
         let filter : String = filter_text(req);
-        let filtered : Vec<lib::btsf::CorrelatedTimeSeries> = result.into_iter().filter(|s| s.series.name.to_ascii_lowercase().contains(&filter)).take(PER_PAGE).collect();
+        let filtered : Vec<dayder::btsf::CorrelatedTimeSeries> = result.into_iter().filter(|s| s.series.name.to_ascii_lowercase().contains(&filter)).take(PER_PAGE).collect();
 
         let mut response_data: Vec<u8> = Vec::new();
-        if let Err(e) = lib::btsf::write_correlated_btsf_file(&filtered[..], &mut response_data) {
+        if let Err(e) = dayder::btsf::write_correlated_btsf_file(&filtered[..], &mut response_data) {
             return Err(IronError::new(e, status::InternalServerError));
         }
 
@@ -79,10 +80,10 @@ fn main() {
 
     fn raw_handler(req: &mut Request) -> IronResult<Response>{
         let filter : String = filter_text(req);
-        let result: Vec<&lib::btsf::BinaryTimeSeries> = DATA_SETS.iter().filter(|s| s.name.to_ascii_lowercase().contains(&filter)).take(PER_PAGE).collect();
+        let result: Vec<&dayder::btsf::BinaryTimeSeries> = DATA_SETS.iter().filter(|s| s.name.to_ascii_lowercase().contains(&filter)).take(PER_PAGE).collect();
 
         let mut response_data: Vec<u8> = Vec::new();
-        if let Err(e) = lib::btsf::write_btsf_file(&result[..], &mut response_data) {
+        if let Err(e) = dayder::btsf::write_btsf_file(&result[..], &mut response_data) {
             return Err(IronError::new(e, status::InternalServerError));
         }
 

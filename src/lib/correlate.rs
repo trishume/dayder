@@ -1,5 +1,5 @@
-use lib::btsf::*;
-use lib::stats::*;
+use btsf::*;
+use stats::*;
 
 const QUERY_SERIES_SIZE_THRESH : usize = 256;
 

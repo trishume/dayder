@@ -1,4 +1,4 @@
-use lib::btsf::*;
+use btsf::*;
 
 const MIN_OVERLAP : usize = 5;
 

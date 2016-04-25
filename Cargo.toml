@@ -12,3 +12,8 @@ persistent = "0.1.0"
 lru_time_cache = "0.2.7"
 lazy_static = "0.1.*"
 url = "0.5.7"
+fst = "0.1.29"
+
+[lib]
+name = "dayder"
+path = "src/lib/mod.rs"
