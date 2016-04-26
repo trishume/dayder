@@ -87,8 +87,16 @@
       align-items: center;
     }
 
+    header {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     #filter-box {
-      width: 800px;
+      width: 95%;
+      max-width: 800px;
       height: 30px;
       padding: 5px;
       outline: none;
@@ -114,18 +122,32 @@
       color: #42A5F5;
     }
 
-    .btsf-attribution {
-      position: absolute;
-      top: 40px;
-      left: 40px;
+    .site-info {
+      font-size: 10pt;
+    }
+
+    .site-info img {
+      padding-right: 10px;
+    }
+
+    @media (min-width: 500px) {
+      .site-info {
+        position: absolute;
+        top: 40px;
+        left: 40px;
+      }
     }
   </style>
 </head>
 <body onload="init()">
     <div class="container">
         <header>
-            <a href="http://github.com/trishume/dayder/blob/master/format.md"><img class="btsf-attribution" src="btsf.png"></a>
             <h1>dayder</h1>
+            <div class="site-info">
+              <a href="http://github.com/trishume/dayder/blob/master/format.md"><img src="btsf.png" height="32"></a>
+              <a href="http://github.com/trishume/dayder"><img src="github.png" height="32"></a><br>
+              Made by <a href="http://thume.ca/">Tristan</a> and <a href="http://mlht.ca/">Marc</a>
+            </div>
             <input type="text" id="filter-box" onchange="filterGraphs();" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" placeholder="type to filter data">
         </header>
     <div class="controls">
