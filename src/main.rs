@@ -37,6 +37,9 @@ lazy_static! {
         }
         all_data
     };
+    static ref SET_NAMES: Vec<String> = {
+        DATA_SETS.iter().map(|s| s.name.to_ascii_lowercase()).collect()
+    };
 }
 
 fn filter_text(req: &Request) -> String {
@@ -79,7 +82,7 @@ fn main() {
 
     fn raw_handler(req: &mut Request) -> IronResult<Response>{
         let filter : String = filter_text(req);
-        let result: Vec<&lib::btsf::BinaryTimeSeries> = DATA_SETS.iter().filter(|s| s.name.to_ascii_lowercase().contains(&filter)).take(PER_PAGE).collect();
+        let result: Vec<&lib::btsf::BinaryTimeSeries> = SET_NAMES.iter().enumerate().filter(|&(_,s)| s.contains(&filter)).take(PER_PAGE).map(|(i,_)| &DATA_SETS[i]).collect();
 
         let mut response_data: Vec<u8> = Vec::new();
         if let Err(e) = lib::btsf::write_btsf_file(&result[..], &mut response_data) {
@@ -102,5 +105,8 @@ fn main() {
 
     // This print statement is partially just to invoke the lazy static
     println!("Serving up {} data sets!", DATA_SETS.len());
+    let total_size : usize = SET_NAMES.iter().map(|x| x.len()).fold(0, |a,b| a+b);
+    println!("Filtering data has size {}", total_size);
+
     Iron::new(chain).http("localhost:8080").unwrap();
 }
