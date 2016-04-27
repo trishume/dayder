@@ -4,6 +4,7 @@ extern crate staticfile;
 extern crate mount;
 extern crate persistent;
 extern crate url;
+extern crate memmem;
 #[macro_use]
 extern crate lazy_static;
 mod lib;
@@ -20,6 +21,7 @@ use std::path::Path;
 use lib::caching::CorrelationCache;
 use std::ascii::AsciiExt;
 use url::percent_encoding::lossy_utf8_percent_decode;
+use memmem::{Searcher, TwoWaySearcher};
 
 const PER_PAGE : usize = 100;
 
@@ -82,7 +84,12 @@ fn main() {
 
     fn raw_handler(req: &mut Request) -> IronResult<Response>{
         let filter : String = filter_text(req);
-        let result: Vec<&lib::btsf::BinaryTimeSeries> = SET_NAMES.iter().enumerate().filter(|&(_,s)| s.contains(&filter)).take(PER_PAGE).map(|(i,_)| &DATA_SETS[i]).collect();
+        let result: Vec<&lib::btsf::BinaryTimeSeries> = if filter != "" {
+            let search = TwoWaySearcher::new(filter.as_bytes());
+            SET_NAMES.iter().enumerate().filter(|&(_,s)| search.search_in(s.as_bytes()).is_some()).take(PER_PAGE).map(|(i,_)| &DATA_SETS[i]).collect()
+        } else {
+            DATA_SETS.iter().take(PER_PAGE).collect()
+        };
 
         let mut response_data: Vec<u8> = Vec::new();
         if let Err(e) = lib::btsf::write_btsf_file(&result[..], &mut response_data) {
