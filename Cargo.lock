@@ -5,6 +5,7 @@ dependencies = [
  "byteorder 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "iron 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazysort 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "lru_time_cache 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "memmem 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "mount 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -112,6 +113,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "lazy_static"
 version = "0.1.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "lazysort"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "libc"

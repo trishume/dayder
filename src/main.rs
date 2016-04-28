@@ -5,6 +5,7 @@ extern crate mount;
 extern crate persistent;
 extern crate url;
 extern crate memmem;
+extern crate lazysort;
 #[macro_use]
 extern crate lazy_static;
 mod lib;
@@ -22,6 +23,7 @@ use lib::caching::CorrelationCache;
 use std::ascii::AsciiExt;
 use url::percent_encoding::lossy_utf8_percent_decode;
 use memmem::{Searcher, TwoWaySearcher};
+use lazysort::SortedPartial;
 
 const PER_PAGE : usize = 100;
 
@@ -71,7 +73,25 @@ fn main() {
         // TODO: Faster filtering algorithm
         // TODO: fuzzy matching
         let filter : String = filter_text(req);
-        let filtered : Vec<lib::btsf::CorrelatedTimeSeries> = result.into_iter().filter(|s| s.series.name.to_ascii_lowercase().contains(&filter)).take(PER_PAGE).collect();
+        let filtered: Vec<lib::btsf::CorrelatedTimeSeries> = if filter != "" {
+            let search = TwoWaySearcher::new(filter.as_bytes());
+            SET_NAMES.iter()
+                     .enumerate()
+                     .filter(|&(_,s)| search.search_in(s.as_bytes()).is_some())
+                     .map(|(i,_)| lib::btsf::CorrelatedTimeSeries { series: &DATA_SETS[i], correlation: result[i]})
+                     .filter(|corr_series| corr_series.correlation != 0.0)
+                     .sorted_partial(false)
+                     .take(PER_PAGE)
+                     .collect()
+        } else {
+            result.iter()
+                  .enumerate()
+                  .map(|(i,c)| lib::btsf::CorrelatedTimeSeries { series: &DATA_SETS[i], correlation: c.clone()})
+                  .filter(|corr_series| corr_series.correlation != 0.0)
+                  .sorted_partial(false)
+                  .take(PER_PAGE)
+                  .collect()
+        };
 
         let mut response_data: Vec<u8> = Vec::new();
         if let Err(e) = lib::btsf::write_correlated_btsf_file(&filtered[..], &mut response_data) {

@@ -21,10 +21,15 @@ pub struct BinaryTimeSeries {
     pub data: Vec<Point>
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct CorrelatedTimeSeries<'a> {
     pub series: &'a BinaryTimeSeries,
     pub correlation: f32
+}
+impl<'a> PartialOrd for CorrelatedTimeSeries<'a> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        other.correlation.partial_cmp(&self.correlation)
+    }
 }
 
 pub fn read_btsf_file<T: Read + Seek>(f: &mut T, series: &mut Vec<BinaryTimeSeries>) -> Result<usize> {
