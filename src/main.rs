@@ -70,7 +70,6 @@ fn main() {
             cache.correlate(&input_charts[0], &DATA_SETS[..])
         };
 
-        // TODO: Faster filtering algorithm
         // TODO: fuzzy matching
         let filter : String = filter_text(req);
         let filtered: Vec<lib::btsf::CorrelatedTimeSeries> = if filter != "" {
