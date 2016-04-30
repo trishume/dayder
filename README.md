@@ -13,3 +13,7 @@ Finds correlations between different causes of death over time and charts them. 
 We designed a custom binary time series data format (btsf!) that allows bandwidth and memory efficient processing of large amounts of time series data.
 
 This is processed using typed arrays in JS on the client and using Rust on the server. All the DOM and canvas rendering is efficient custom code so that it can render thousands of graphs in milliseconds.
+
+## License
+
+This project is released under the MIT license, see the `LICENSE` file for details.
