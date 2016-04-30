@@ -3,7 +3,7 @@ use lib::stats::*;
 
 const QUERY_SERIES_SIZE_THRESH : usize = 256;
 
-pub fn correlate(data: &BinaryTimeSeries, possibilities: &'static [BinaryTimeSeries]) -> Vec<f32>{
+pub fn correlate(data: &BinaryTimeSeries, possibilities: &[BinaryTimeSeries]) -> Vec<f32>{
     let query_series : BinaryTimeSeries = if data.data.len() < QUERY_SERIES_SIZE_THRESH {
         data.clone()
     } else {
@@ -25,6 +25,8 @@ pub fn correlate(data: &BinaryTimeSeries, possibilities: &'static [BinaryTimeSer
             0.0
         }
     }).collect();
+
+    println!("Found correlations for '{}'", data.name);
 
     return correlations;
 }
