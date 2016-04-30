@@ -3,10 +3,7 @@ use lib::stats::*;
 
 const QUERY_SERIES_SIZE_THRESH : usize = 256;
 
-pub fn correlate(data: &BinaryTimeSeries, possibilities: &'static [BinaryTimeSeries]) -> Vec<CorrelatedTimeSeries<'static>>{
-    // let mut possibilities = read_btsf_file(&mut File::open("./btsf/mortality.btsf").unwrap());
-    let mut correlations = Vec::new();
-
+pub fn correlate(data: &BinaryTimeSeries, possibilities: &[BinaryTimeSeries]) -> Vec<f32>{
     let query_series : BinaryTimeSeries = if data.data.len() < QUERY_SERIES_SIZE_THRESH {
         data.clone()
     } else {
@@ -21,18 +18,15 @@ pub fn correlate(data: &BinaryTimeSeries, possibilities: &'static [BinaryTimeSer
         }
     };
 
-    for poss in possibilities {
+    let correlations : Vec<f32> = possibilities.iter().map(|poss| {
         if let Some((xs, ys)) = pairinate(&query_series, poss) {
-            correlations.push(CorrelatedTimeSeries{
-                series: poss,
-                correlation: pearson_correlation_coefficient(&xs, &ys) as f32
-            });
+            pearson_correlation_coefficient(&xs, &ys) as f32
+        } else {
+            0.0
         }
-    }
+    }).collect();
 
-    correlations.sort_by(|btsa, btsb| btsb.correlation.partial_cmp(&btsa.correlation).unwrap());
-
-    println!("{}", correlations[0].correlation);
+    println!("Found correlations for '{}'", data.name);
 
     return correlations;
 }
