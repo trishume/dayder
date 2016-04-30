@@ -4,7 +4,7 @@
 
 Having been originally created for a "Stupid shit no-one needs and terrible ideas" hackathon, we don't even pretend that Dayder is useful. It is mostly a tech demo for making a super fast web app despite dealing with large quantities of data. Dayder uses [a custom binary format](https://github.com/trishume/dayder/blob/master/format.md), custom JS Canvas and DOM rendering, heavily optimized server-side code in Rust, caching and tuned data layouts for excellent performance. It can filter through 390,000+ data sets as you type with sub 50ms server response time and instantaneous rendering of thousands of graphs in the browser. It also can find correlations among all 390,000+ data sets in less than 2 seconds.
 
-![Dayder](http://i.imgur.com/hMzo0ML.png)
+![Dayder](http://i.imgur.com/EGyqdb4.png)
 
 ## Origins
 
