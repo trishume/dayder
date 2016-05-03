@@ -8,6 +8,7 @@ extern crate memmem;
 extern crate lazysort;
 #[macro_use]
 extern crate lazy_static;
+extern crate hprof;
 mod lib;
 
 use std::fs::File;
@@ -53,6 +54,10 @@ fn filter_text(req: &Request) -> String {
 
 fn main() {
     fn find_handler(req: &mut Request) -> IronResult<Response>{
+        let p = hprof::Profiler::new("find handler");
+        p.start_frame();
+        p.enter_noguard("request");
+
         let mut buffer: Vec<u8> = Vec::new();
         req.body.read_to_end(&mut buffer).unwrap();
         let mut input_charts = Vec::with_capacity(1);
@@ -65,6 +70,7 @@ fn main() {
 
 
         let result = {
+            let _g = p.enter("correlating");
             let mutex = req.get::<persistent::Write<CorrCache>>().unwrap();
             let mut cache = mutex.lock().unwrap();
             cache.correlate(&input_charts[0], &DATA_SETS[..])
@@ -72,6 +78,7 @@ fn main() {
 
         // TODO: fuzzy matching
         let filter : String = filter_text(req);
+        p.enter_noguard("filtering");
         let filtered: Vec<lib::btsf::CorrelatedTimeSeries> = if filter != "" {
             let search = TwoWaySearcher::new(filter.as_bytes());
             SET_NAMES.iter()
@@ -91,29 +98,46 @@ fn main() {
                   .take(PER_PAGE)
                   .collect()
         };
+        p.leave();
 
         let mut response_data: Vec<u8> = Vec::new();
         if let Err(e) = lib::btsf::write_correlated_btsf_file(&filtered[..], &mut response_data) {
             return Err(IronError::new(e, status::InternalServerError));
         }
 
+        p.leave();
+        p.end_frame();
+        println!("Find handler, filter: '{}', corr: '{}'", filter, input_charts[0].name);
+        p.print_timing();
+
         let content_type: Mime = "application/octet-stream".parse().unwrap();
         return Ok(Response::with((status::Ok, content_type, response_data)));
     };
 
     fn raw_handler(req: &mut Request) -> IronResult<Response>{
+        let p = hprof::Profiler::new("raw handler");
+        p.start_frame();
+        p.enter_noguard("request");
+
         let filter : String = filter_text(req);
+        p.enter_noguard("filtering");
         let result: Vec<&lib::btsf::BinaryTimeSeries> = if filter != "" {
             let search = TwoWaySearcher::new(filter.as_bytes());
             SET_NAMES.iter().enumerate().filter(|&(_,s)| search.search_in(s.as_bytes()).is_some()).take(PER_PAGE).map(|(i,_)| &DATA_SETS[i]).collect()
         } else {
             DATA_SETS.iter().take(PER_PAGE).collect()
         };
+        p.leave();
 
         let mut response_data: Vec<u8> = Vec::new();
         if let Err(e) = lib::btsf::write_btsf_file(&result[..], &mut response_data) {
             return Err(IronError::new(e, status::InternalServerError));
         }
+
+        p.leave();
+        p.end_frame();
+        println!("Raw handler, query: '{}'", filter);
+        p.print_timing();
 
         let content_type: Mime = "application/octet-stream".parse().unwrap();
         return Ok(Response::with((status::Ok, content_type, response_data)));
