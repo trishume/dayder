@@ -1,5 +1,7 @@
+extern crate rayon;
 use lib::btsf::*;
 use lib::stats::*;
+use self::rayon::prelude::*;
 
 const QUERY_SERIES_SIZE_THRESH : usize = 256;
 
@@ -18,13 +20,14 @@ pub fn correlate(data: &BinaryTimeSeries, possibilities: &[BinaryTimeSeries]) ->
         }
     };
 
-    let correlations : Vec<f32> = possibilities.iter().map(|poss| {
+    let mut correlations : Vec<f32> = Vec::new();
+    possibilities.par_iter().map(|poss| {
         if let Some((xs, ys)) = pairinate(&query_series, poss) {
             pearson_correlation_coefficient(&xs, &ys) as f32
         } else {
             0.0
         }
-    }).collect();
+    }).collect_into(&mut correlations);
 
     println!("Found correlations for '{}'", data.name);
 
