@@ -177,21 +177,22 @@ function drawGraphLine(ctx,w,h,minT,maxT,data,trace) {
   }
 }
 
-function drawGraph(canvasEl, data, trace) {
+function drawGraph(canvasEl, record, trace) {
+  var data = record.data;
   var ctx = canvasEl.getContext("2d");
   ctx.fillStyle = "white";
   ctx.fillRect(0,0,canvasEl.width,canvasEl.height);
 
   var maxT = _.max(data, function(p) { return p.t; }).t;
   var minT = _.min(data, function(p) { return p.t; }).t;
-  if(curOverlay !== null) {
+  if(curOverlay !== null && record.corr !== null) {
     maxT = Math.min(maxT,_.max(curOverlay, function(p) { return p.t; }).t);
     minT = Math.max(minT,_.min(curOverlay, function(p) { return p.t; }).t);
     ctx.strokeStyle = "grey";
-    drawGraphLine(ctx,canvasEl.width,canvasEl.height,minT,maxT, curOverlay, null);
+    drawGraphLine(ctx, canvasEl.width, canvasEl.height, minT, maxT, curOverlay, null);
   }
   ctx.strokeStyle = "#2196F3";
-  drawGraphLine(ctx,canvasEl.width,canvasEl.height,minT,maxT, data, trace);
+  drawGraphLine(ctx, canvasEl.width, canvasEl.height, minT, maxT, data, trace);
 }
 
 function displayRecords(records, maxRecords) {
@@ -221,7 +222,7 @@ function displayRecords(records, maxRecords) {
     })();
 
     var canvasEl = document.getElementById("canv-"+i);
-    drawGraph(canvasEl, records[i].data, null);
+    drawGraph(canvasEl, records[i], null);
   }
 }
 
@@ -261,10 +262,10 @@ function setNumberOfGraphs(n) {
         var curI = (numPresent+i);
         var curCanvas = canvas;
         canvas.addEventListener('mousemove', function(evt) {
-          drawGraph(curCanvas, curRecords[curI].data, {x: evt.offsetX, y: evt.offsetY});
+          drawGraph(curCanvas, curRecords[curI], {x: evt.offsetX, y: evt.offsetY});
         }, false);
         canvas.addEventListener('mouseout', function(evt) {
-          drawGraph(curCanvas, curRecords[curI].data, null);
+          drawGraph(curCanvas, curRecords[curI], null);
         }, false);
       })();
 
