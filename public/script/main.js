@@ -213,11 +213,13 @@ function displayRecords(records, maxRecords) {
     }
 
     var link = document.getElementById("btn-"+i);
+    link.src = 'graph-icon.svg';
     // needed because JS closures interact weirdly with loops
     (function(){
       var record = records[i];
-      link.onclick = function() {
+      link.onclick = function(evt) {
         findCorrelations(record);
+        evt.target.src = "loading-icon.svg";
       }
     })();
 
