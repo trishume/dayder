@@ -8,6 +8,7 @@ var reqCorrelationQuery = null;
 var curRecords = null;
 var curOverlay = null;
 
+var pendingOverlay = null;
 var inFlightRequest = null;
 
 // http://stackoverflow.com/questions/149055/how-can-i-format-numbers-as-money-in-javascript
@@ -188,10 +189,10 @@ function drawGraph(canvasEl, data, trace) {
     maxT = Math.min(maxT,_.max(curOverlay, function(p) { return p.t; }).t);
     minT = Math.max(minT,_.min(curOverlay, function(p) { return p.t; }).t);
     ctx.strokeStyle = "grey";
-    drawGraphLine(ctx,canvasEl.width,canvasEl.height,minT,maxT, curOverlay, null);
+    drawGraphLine(ctx, canvasEl.width, canvasEl.height, minT, maxT, curOverlay, null);
   }
   ctx.strokeStyle = "#2196F3";
-  drawGraphLine(ctx,canvasEl.width,canvasEl.height,minT,maxT, data, trace);
+  drawGraphLine(ctx, canvasEl.width, canvasEl.height, minT, maxT, data, trace);
 }
 
 function displayRecords(records, maxRecords) {
@@ -212,11 +213,13 @@ function displayRecords(records, maxRecords) {
     }
 
     var link = document.getElementById("btn-"+i);
+    link.src = 'graph-icon.svg';
     // needed because JS closures interact weirdly with loops
     (function(){
       var record = records[i];
-      link.onclick = function() {
+      link.onclick = function(evt) {
         findCorrelations(record);
+        evt.target.src = "loading-icon.svg";
       }
     })();
 
@@ -292,7 +295,7 @@ function redisplay() {
 function findCorrelations(record) {
   var dataBuf = serializeBtsfRecord(record);
   reqCorrelationQuery = dataBuf;
-  curOverlay = record.data;
+  pendingOverlay = record.data;
 
   reqFilter = "";
   document.getElementById('filter-box').value = "";
@@ -310,7 +313,7 @@ function filterGraphs() {
 
 function clearCorr() {
   reqCorrelationQuery = null;
-  curOverlay = null;
+  pendingOverlay = null;
   updateFromServer();
 }
 
@@ -320,6 +323,7 @@ function handleNewData(oEvent) {
   var arrayBuffer = oEvent.target.response; // Note: not oReq.responseText
   if (arrayBuffer) {
     curRecords = readBtsfFile(arrayBuffer);
+    curOverlay = pendingOverlay;
     redisplay();
   } else {
     console.log("Couldn't fetch file " + url);
