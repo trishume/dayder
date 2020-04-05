@@ -21,7 +21,6 @@ use mount::Mount;
 use staticfile::Static;
 use std::path::Path;
 use lib::caching::CorrelationCache;
-use std::ascii::AsciiExt;
 use url::percent_encoding::lossy_utf8_percent_decode;
 use memmem::{Searcher, TwoWaySearcher};
 use lazysort::SortedPartial;
