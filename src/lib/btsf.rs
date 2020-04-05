@@ -36,13 +36,13 @@ pub fn read_btsf_file<T: Read + Seek>(
     f: &mut T,
     series: &mut Vec<BinaryTimeSeries>,
 ) -> Result<usize> {
-    try!(f.seek(SeekFrom::Start(0)));
-    let _ = try!(f.read_u32::<LittleEndian>());
-    let file_header_len = try!(f.read_u32::<LittleEndian>());
-    let rec_header_len = try!(f.read_u32::<LittleEndian>());
-    let num_records = try!(f.read_u32::<LittleEndian>());
+    f.seek(SeekFrom::Start(0))?;
+    let _ = f.read_u32::<LittleEndian>()?;
+    let file_header_len = f.read_u32::<LittleEndian>()?;
+    let rec_header_len = f.read_u32::<LittleEndian>()?;
+    let num_records = f.read_u32::<LittleEndian>()?;
 
-    try!(f.seek(SeekFrom::Start(file_header_len as u64)));
+    f.seek(SeekFrom::Start(file_header_len as u64))?;
 
     // println!("Version Number: {}", version);
     // println!("File Header Len: {}", file_header_len);
@@ -51,12 +51,12 @@ pub fn read_btsf_file<T: Read + Seek>(
 
     series.reserve(num_records as usize);
     for _ in 0..num_records {
-        let n = try!(f.read_u32::<LittleEndian>());
-        let name_length = try!(f.read_u32::<LittleEndian>());
-        try!(f.seek(SeekFrom::Current((rec_header_len - 8) as i64))); // Skip padding bytes;
+        let n = f.read_u32::<LittleEndian>()?;
+        let name_length = f.read_u32::<LittleEndian>()?;
+        f.seek(SeekFrom::Current((rec_header_len - 8) as i64))?; // Skip padding bytes;
 
         let mut buffer = [0; 1024];
-        try!(f.take(name_length as u64).read(&mut buffer));
+        f.take(name_length as u64).read(&mut buffer)?;
 
         let name = match str::from_utf8(&buffer[0..(name_length as usize)]) {
             Ok(s) => s,
@@ -66,8 +66,8 @@ pub fn read_btsf_file<T: Read + Seek>(
         let mut data = Vec::<Point>::new();
 
         for _ in 0..n {
-            let t = try!(f.read_i32::<LittleEndian>());
-            let d = try!(f.read_f32::<LittleEndian>());
+            let t = f.read_i32::<LittleEndian>()?;
+            let d = f.read_f32::<LittleEndian>()?;
             data.push(Point { t: t, val: d });
         }
         series.push(BinaryTimeSeries {
@@ -81,19 +81,19 @@ pub fn read_btsf_file<T: Read + Seek>(
 
 pub fn write_btsf_file<T: Write>(data: &[&BinaryTimeSeries], output: &mut T) -> Result<()> {
     // Version Header, File Header Len, Rec Header Len
-    try!(output.write_u32::<LittleEndian>(2));
-    try!(output.write_u32::<LittleEndian>(4 * 4));
-    try!(output.write_u32::<LittleEndian>(4 * 2));
+    output.write_u32::<LittleEndian>(2)?;
+    output.write_u32::<LittleEndian>(4 * 4)?;
+    output.write_u32::<LittleEndian>(4 * 2)?;
 
-    try!(output.write_u32::<LittleEndian>(data.len() as u32));
+    output.write_u32::<LittleEndian>(data.len() as u32)?;
 
     for record in data {
-        try!(output.write_u32::<LittleEndian>(record.data.len() as u32));
-        try!(output.write_u32::<LittleEndian>(record.name.len() as u32));
-        try!(output.write(&record.name.as_bytes()));
+        output.write_u32::<LittleEndian>(record.data.len() as u32)?;
+        output.write_u32::<LittleEndian>(record.name.len() as u32)?;
+        output.write(&record.name.as_bytes())?;
         for i in 0..record.data.len() {
-            try!(output.write_i32::<LittleEndian>(record.data[i].t));
-            try!(output.write_f32::<LittleEndian>(record.data[i].val));
+            output.write_i32::<LittleEndian>(record.data[i].t)?;
+            output.write_f32::<LittleEndian>(record.data[i].val)?;
         }
     }
     Ok(())
@@ -104,21 +104,21 @@ pub fn write_correlated_btsf_file<T: Write>(
     output: &mut T,
 ) -> Result<()> {
     // Version Header, File Header Len, Rec Header Len
-    try!(output.write_u32::<LittleEndian>(2));
-    try!(output.write_u32::<LittleEndian>(4 * 4));
-    try!(output.write_u32::<LittleEndian>(4 * 3));
+    output.write_u32::<LittleEndian>(2)?;
+    output.write_u32::<LittleEndian>(4 * 4)?;
+    output.write_u32::<LittleEndian>(4 * 3)?;
 
-    try!(output.write_u32::<LittleEndian>(data.len() as u32));
+    output.write_u32::<LittleEndian>(data.len() as u32)?;
 
     for corr_record in data {
         let record = corr_record.series;
-        try!(output.write_u32::<LittleEndian>(record.data.len() as u32));
-        try!(output.write_u32::<LittleEndian>(record.name.len() as u32));
-        try!(output.write_f32::<LittleEndian>(corr_record.correlation as f32));
-        try!(output.write(&record.name.as_bytes()));
+        output.write_u32::<LittleEndian>(record.data.len() as u32)?;
+        output.write_u32::<LittleEndian>(record.name.len() as u32)?;
+        output.write_f32::<LittleEndian>(corr_record.correlation as f32)?;
+        output.write(&record.name.as_bytes())?;
         for i in 0..record.data.len() {
-            try!(output.write_i32::<LittleEndian>(record.data[i].t));
-            try!(output.write_f32::<LittleEndian>(record.data[i].val));
+            output.write_i32::<LittleEndian>(record.data[i].t)?;
+            output.write_f32::<LittleEndian>(record.data[i].val)?;
         }
     }
     Ok(())
