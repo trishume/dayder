@@ -1,12 +1,12 @@
-use std::io::*;
-use std::str;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use std::cmp::Ordering;
+use std::io::*;
+use std::str;
 
 #[derive(PartialEq, PartialOrd, Clone, Debug)]
 pub struct Point {
     pub t: i32,
-    pub val: f32
+    pub val: f32,
 }
 impl Eq for Point {}
 impl Ord for Point {
@@ -18,13 +18,13 @@ impl Ord for Point {
 #[derive(PartialEq, PartialOrd, Eq, Ord, Clone, Debug)]
 pub struct BinaryTimeSeries {
     pub name: String,
-    pub data: Vec<Point>
+    pub data: Vec<Point>,
 }
 
 #[derive(Clone, PartialEq)]
 pub struct CorrelatedTimeSeries<'a> {
     pub series: &'a BinaryTimeSeries,
-    pub correlation: f32
+    pub correlation: f32,
 }
 impl<'a> PartialOrd for CorrelatedTimeSeries<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -32,7 +32,10 @@ impl<'a> PartialOrd for CorrelatedTimeSeries<'a> {
     }
 }
 
-pub fn read_btsf_file<T: Read + Seek>(f: &mut T, series: &mut Vec<BinaryTimeSeries>) -> Result<usize> {
+pub fn read_btsf_file<T: Read + Seek>(
+    f: &mut T,
+    series: &mut Vec<BinaryTimeSeries>,
+) -> Result<usize> {
     try!(f.seek(SeekFrom::Start(0)));
     let _ = try!(f.read_u32::<LittleEndian>());
     let file_header_len = try!(f.read_u32::<LittleEndian>());
@@ -65,11 +68,11 @@ pub fn read_btsf_file<T: Read + Seek>(f: &mut T, series: &mut Vec<BinaryTimeSeri
         for _ in 0..n {
             let t = try!(f.read_i32::<LittleEndian>());
             let d = try!(f.read_f32::<LittleEndian>());
-            data.push(Point{t: t, val: d});
+            data.push(Point { t: t, val: d });
         }
-        series.push(BinaryTimeSeries{
+        series.push(BinaryTimeSeries {
             name: String::from(name),
-            data: data
+            data: data,
         })
     }
 
@@ -79,8 +82,8 @@ pub fn read_btsf_file<T: Read + Seek>(f: &mut T, series: &mut Vec<BinaryTimeSeri
 pub fn write_btsf_file<T: Write>(data: &[&BinaryTimeSeries], output: &mut T) -> Result<()> {
     // Version Header, File Header Len, Rec Header Len
     try!(output.write_u32::<LittleEndian>(2));
-    try!(output.write_u32::<LittleEndian>(4*4));
-    try!(output.write_u32::<LittleEndian>(4*2));
+    try!(output.write_u32::<LittleEndian>(4 * 4));
+    try!(output.write_u32::<LittleEndian>(4 * 2));
 
     try!(output.write_u32::<LittleEndian>(data.len() as u32));
 
@@ -96,11 +99,14 @@ pub fn write_btsf_file<T: Write>(data: &[&BinaryTimeSeries], output: &mut T) -> 
     Ok(())
 }
 
-pub fn write_correlated_btsf_file<T: Write>(data: &[CorrelatedTimeSeries], output: &mut T) -> Result<()> {
+pub fn write_correlated_btsf_file<T: Write>(
+    data: &[CorrelatedTimeSeries],
+    output: &mut T,
+) -> Result<()> {
     // Version Header, File Header Len, Rec Header Len
     try!(output.write_u32::<LittleEndian>(2));
-    try!(output.write_u32::<LittleEndian>(4*4));
-    try!(output.write_u32::<LittleEndian>(4*3));
+    try!(output.write_u32::<LittleEndian>(4 * 4));
+    try!(output.write_u32::<LittleEndian>(4 * 3));
 
     try!(output.write_u32::<LittleEndian>(data.len() as u32));
 
